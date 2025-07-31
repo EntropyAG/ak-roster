@@ -351,6 +351,7 @@ const Home: NextPage = () => {
               <HomeNavItem href={"/tools/recruit"}>Recruitment</HomeNavItem>
               <HomeNavItem href={"/tools/rateup"}>Headhunting</HomeNavItem>
               <HomeNavItem href={"/tools/level"}>Level Costs</HomeNavItem>
+              <HomeNavItem href={"/tools/basemaker"}>Base maker</HomeNavItem>
             </HomeNavSection>
             <HomeNavSection title="Community" color={brand["/community"]} src="community">
               <HomeNavItem

@@ -56,6 +56,10 @@ const config: SiteCfg = {
           title: "Level Costs",
           description: "Calculate LMD and EXP costs to level operators.",
         },
+        "/basemaker": {
+          title: "Base Maker",
+          description: "Calculate a base rotation.",
+        },
       },
     },
     "": {
