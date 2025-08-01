@@ -1,7 +1,7 @@
 import cnCharacterTable from "../../ArknightsGameData/zh_CN/gamedata/excel/character_table.json";
 
 import { tpOrders, tpDailyLmd } from "../../../src/data/riic/tpOrders.ts";
-import roundTo from "../../../src/util/fns/mathUtils.ts";
+import { roundTo } from "../../../src/util/fns/mathUtils.ts";
 
 /**
  * Evaluate the player's roster to see whether it's viable to run PI/SR.
