@@ -7,9 +7,13 @@
  * @param digits: significant digits that should be kept
  * @returns rounded number
  */
-export default function roundTo(num: number, digits: number) {
+export function roundTo(num: number, digits: number) {
   if(!digits){
       digits = 0;
   }
   return Math.round(num * Math.pow(10, digits)) / Math.pow(10, digits);
+};
+
+export function isEven(num: number){
+  return Math.abs(num) % 2 === 0;
 };

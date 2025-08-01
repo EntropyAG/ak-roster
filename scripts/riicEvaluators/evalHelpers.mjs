@@ -1,6 +1,6 @@
 import cnBuildingData from "../ArknightsGameData/zh_CN/gamedata/excel/building_data.json";
 
-import roundTo from "../../src/util/fns/mathUtils.ts";
+import { roundTo } from "../../src/util/fns/mathUtils.ts";
 
 import { riicSkills } from "../../src/data/riic/skills.ts";
 import { a1Operators, bswOperators, karlanTradeOperators } from "../../src/data/riic/operators.ts";

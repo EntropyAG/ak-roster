@@ -95,8 +95,8 @@ export const planify = (roster, base, isMoraleMicro, assumePromotionLevel) => {
     console.log(shamareScore);
     //let penguinScore = this.evalPenguinLogistics(roster);
     //console.log(penguinScore);
-    //let pozyGLPScore = evalPozyGLP(roster, base);
-    //console.log(pozyGLPScore);
+    let pozyGLPScore = evalPozyGLP(roster, base);
+    console.log(pozyGLPScore);
     // TODO: E0 Jaye
     // TODO: E1 Jaye
     // TODO: Proviso

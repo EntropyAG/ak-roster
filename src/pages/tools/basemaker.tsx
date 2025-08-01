@@ -23,7 +23,7 @@ const Basemaker: NextPage = () => {
         { type: "TP",  level: 3, product: undefined },
         { type: "TP",  level: 2, product: undefined },
         { type: "FAC", level: 3, product: "gold" },
-        { type: "FAC", level: 3, product: "exp" },
+        { type: "FAC", level: 3, product: "gold" },
         { type: "FAC", level: 2, product: "gold" },
         { type: "FAC", level: 2, product: "gold" },
         { type: "FAC", level: 2, product: "exp" },
