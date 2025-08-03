@@ -51,6 +51,16 @@ export const vermeilBubbleTeamCandidates = [
     "char_369_bena"     // Bena
 ];
 
+// Candidates for Jaye without Gnosis in CC
+export const jayeCandidates = [
+    "char_102_texas",  // Texas
+    "char_140_whitew", // Lappland
+    "char_172_svrash", // Silverash
+    "char_4163_rosesa",// Rose Salt
+    "char_325_bison",  // Bison
+    "char_173_slchan", // Cliffheart
+];
+
 /**
  * Excludes operators that are only viable candidates thanks to Vermeil/Bubble, like Bena/Bubble/Click
  * Evaluation should be done on general + gold OR general + Exp operators for FAC, to limit how many

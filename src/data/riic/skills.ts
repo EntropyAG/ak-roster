@@ -370,7 +370,8 @@ export const riicSkills = {
     },
     // Exusiai E0
     "trade_ord_spd[010]":{
-        "productivity_flat": 20
+        "productivity_flat": 20,
+        "is_exusiai_present": 1
     },
     // Sora E2
     "trade_ord_spd[011]":{
@@ -378,7 +379,8 @@ export const riicSkills = {
     },
     // Exusiai E2
     "trade_ord_spd[020]":{
-        "productivity_flat": 35
+        "productivity_flat": 35,
+        "is_exusiai_present": 1
     },
     // Heidi E2
     "trade_ord_spd[021]":{
@@ -395,6 +397,11 @@ export const riicSkills = {
     // Gummy E0, Catapult E0, Midnight E0
     "trade_ord_spd&cost[000]":{
         "productivity_flat": 30
+    },
+    // Texas E0
+    "trade_ord_spd&cost_P[000]":{
+        "productivity_if_lappland_present": 65,
+        "is_texas_present": 1
     },
     // Quartz E1
     "trade_ord_spd&formula[000]":{
@@ -423,7 +430,8 @@ export const riicSkills = {
     },
     // Exusiai alter E2
     "trade_ord_spd_par[001]":{
-        "productivity_per_laterano": 15
+        "productivity_per_laterano": 15,
+        "is_exusiai_present": 1
     },
     // Swire alter E2
     "trade_ord_spd_variable[000]": {
@@ -450,6 +458,16 @@ export const riicSkills = {
     "trade_ord_limit&trade&lv[001]":{
         "cap_per_trading_post_level": 1
     },
+    // Lappland E0
+    "trade_ord_limit&cost_P[000]":{
+        "cap_flat_if_texas_present": 2,
+        "is_lappland_present": 1
+    },
+    // Lappland E2
+    "trade_ord_limit&cost_P[001]":{
+        "cap_flat_if_texas_present": 4,
+        "is_lappland_present": 1
+    },
     // Vigil E2
     "trade_ord_spd&meet[000]":{
         "productivity_flat": 25,
@@ -473,7 +491,7 @@ export const riicSkills = {
     "trade_ord_spd&multiPar[000]":{
         "productivity_flat": 20,
     },
-    // Lemuen E2 (replaces...?)
+    // Lemuen E2 (replaces)
     "trade_ord_spd&multiPar[100]":{
         "productivity_flat": 20,
         "productivity_if_exusiai_present": 35
@@ -562,25 +580,33 @@ export const riicSkills = {
     "trade_ord_spd_variable3[000]": {
         "productivity_per_5_external_cap": 25
     },
-    // Bena E2, Bibeak E0
+    // Bena E2, Bibeak E0, Paprika E0
     "trade_ord_wt&cost[000]":{
-        "higher_yield_gold_orders": 1
+        "tailoring_alpha": 1
+    },
+    // Kafka E0
+    "trade_ord_wt&cost[001]":{
+        "tailoring_alpha": 1
     },
     // Diamante E0
     "trade_ord_wt&cost[002]":{
-        "higher_yield_gold_orders": 1
+        "tailoring_alpha": 1
     },
     // Mitm E0
     "trade_ord_wt&cost[003]":{
-        "higher_yield_gold_orders": 1
+        "tailoring_alpha": 1
     },
-    // Bibeak E2
+    // Bibeak E2, Paprika E2
     "trade_ord_wt&cost[010]":{
-        "higher_yield_gold_orders": 2
+        "tailoring_beta": 1
+    },
+    // Kafka E2
+    "trade_ord_wt&cost[011]":{
+        "tailoring_beta": 1
     },
     // Diamante E2
     "trade_ord_wt&cost[012]":{
-        "higher_yield_gold_orders": 2
+        "tailoring_beta": 1
     },
 
     // ========================== POWER PLANT =============================

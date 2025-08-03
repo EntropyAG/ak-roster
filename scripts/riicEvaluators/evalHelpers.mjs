@@ -5,6 +5,12 @@ import { roundTo } from "../../src/util/fns/mathUtils.ts";
 import { riicSkills } from "../../src/data/riic/skills.ts";
 import { a1Operators, bswOperators, karlanTradeOperators } from "../../src/data/riic/operators.ts";
 
+const TP_CAPS = {
+    1: 6,
+    2: 8,
+    3: 10
+};
+
 /**
  * Returns only RIIC skills that are currently active for a given operator, based
  * on their operator and promotion levels.
@@ -37,7 +43,7 @@ export const getActiveOperatorRiicSkills = (operator) => {
 export const checkOperatorCount = (...opsUsed) => {
     let count = 0;
     for(let opUsed of opsUsed){
-        if(opUsed === true || (opUsed !== undefined && opUsed !== null)){
+        if(opUsed === true || (opUsed !== undefined && opUsed !== null && opUsed !== false)){
             count++;
         }
     }
@@ -48,17 +54,41 @@ export const checkOperatorCount = (...opsUsed) => {
  * Given a list of 3 operators, return the expected stats for a lvl 3 trading post
  * @param  {Array[Operator]} ops: An array containing 2 or 3 operators (functions with less)
  */
-export const getTradingPostStats = (ops, gnosisBuff = false) => {
+export const getTradingPostStats = (ops, base, gnosisBuff = false, tpLvl = 3) => {
     // As provided by the various operators, does not include the TP one
     let buffs = {
         "productivity_flat": 0,
+        "cap_flat": 0,
+        // Swire alter
         "productivity_per_external_cap": 0,
+        // Jaye
         "productivity_per_total_cap": 0,
         "productivity_per_diff_max_to_current": 0,
-        "cap_flat": 0,
         "cap_per_10_external_productivity": 0,
-        "productivity_per_5_external_cap": 0
+        // Degenbrecher
+        "productivity_per_5_external_cap": 0,
+        // Firewhistle
+        "productivity_to_others": 0,
+        // Lappland & Texas
+        "productivity_if_lappland_present": 0,
+        "is_texas_present": 0,
+        "cap_flat_if_texas_present": 0,
+        "is_lappland_present": 0,
+        // Vigil / Mitm
+        "productivity_per_reception_room_level": 0,
+        // Siege alter
+        "productivity_if_another_op_present": 0,
+        // Lemuen
+        "productivity_if_exusiai_present": 0,
+        "is_exusiai_present": 0,
+        // Archetto
+        "productivity_per_dorm": 0,
+        // Quartz
+        "productivity_per_recipe": 0,
+        // Rose Salt
+        "cap_per_trading_post_level": 0
     };
+
     for(let operator of ops){
         for(let skill of getActiveOperatorRiicSkills(operator)){
             if(!riicSkills[skill.buffId]){
@@ -71,36 +101,64 @@ export const getTradingPostStats = (ops, gnosisBuff = false) => {
             }
         }
         // Gnosis effect added
-        if(gnosisBuff && karlanTradeOperators.includes(operator.id)){
+        if(gnosisBuff && karlanTradeOperators.includes(operator.op_id)){
             buffs.productivity_flat -= 15;
             buffs.cap_flat += 6;
         }
     }
-    // Capped at 100, not debuffed by Jaye
-    let degenbrecherProductivity = Math.min(buffs.productivity_per_5_external_cap * Math.floor(buffs.cap_flat / 5), 100);
-    let bonusCap =
-        buffs.cap_flat
-        // Jaye exclusive, cap reduction based on other ops productivity
-        + buffs.cap_per_10_external_productivity * Math.floor((degenbrecherProductivity + buffs.productivity_flat) / 10);
+
+    let tpDefaultCap = TP_CAPS[tpLvl];
+
     let totalProductivity =
         // Standard productivity
         buffs.productivity_flat
-        // Swire alter exclusive
-        + buffs.productivity_per_external_cap * bonusCap
-        // Jaye exclusive
-        + (
-            + buffs.productivity_per_total_cap * (bonusCap + 10)
-            + buffs.productivity_per_diff_max_to_current * (bonusCap + 10)
-        ) / 2
-        // Degenbrecher exclusive
-        + degenbrecherProductivity
+        // Degenbrecher (not debuffed by Jaye)
+        + Math.min(buffs.productivity_per_5_external_cap * Math.floor(buffs.cap_flat / 5), 100)
+        // Firewhistle
+        + buffs.productivity_to_others * (ops.length - 1)
+        // Texas / Lappy
+        + buffs.is_texas_present * buffs.is_lappland_present * buffs.productivity_if_lappland_present
+        // Vigil / Mitm
+        + buffs.productivity_per_reception_room_level * base.receptionRoom
+        // Siege alter
+        + buffs.productivity_if_another_op_present * Math.min(1, ops.length - 1)
+        // Lemuen / Exusiai
+        + buffs.is_exusiai_present * buffs.productivity_if_exusiai_present
+        // Archetto
+        + buffs.productivity_per_dorm * base.getSumOfDormLevels()
+        // Quartz
+        + buffs.productivity_per_recipe * base.getDifferentRecipesCount()
     ;
+
+    let bonusCap =
+        buffs.cap_flat
+        // Jaye exclusive, cap reduction based on other ops productivity
+        + buffs.cap_per_10_external_productivity * Math.floor(totalProductivity / tpDefaultCap)
+        // Texas / Lappland
+        + buffs.is_texas_present * buffs.is_lappland_present * buffs.cap_flat_if_texas_present
+        // Rose Salt
+        + buffs.cap_per_trading_post_level * tpLvl
+    ;
+    console.log(ops[0].op_id + " - " + ops[1].op_id + " - " + ops[2].op_id);
+    console.log(buffs);
+    console.log("Bonus cap", bonusCap);
+    console.log("Total PD before Jaye/Swirealt", totalProductivity);
+    totalProductivity += 0
+    // Jaye exclusive
+    + (
+        + buffs.productivity_per_total_cap * (bonusCap + tpDefaultCap)
+        + buffs.productivity_per_diff_max_to_current * (bonusCap + tpDefaultCap)
+    ) / 2
+    // Swire alter exclusive
+    + buffs.productivity_per_external_cap * bonusCap;
+    console.log("Total PD after Jaye/Swirealt", totalProductivity);
+
     return {
         "operator1": ops[0],
         "operator2": ops[1],
         "operator3": ops[2],
         "bonusCap": bonusCap,
-        "totalCap": bonusCap + 10,
+        "totalCap": bonusCap + tpDefaultCap,
         "totalProductivity": totalProductivity
     };
 };
@@ -197,30 +255,30 @@ export const getFactoryStats = (ops, base,
         }
         // ===== Complementary checks =====
         // sum_of_cap_above_16 (Bubble)
-        if(operator.id === "char_369_bena"){
+        if(operator.op_id === "char_369_bena"){
             buffs.sum_of_cap_above_16 += 17;
         }
-        if(operator.id === "char_163_hpsts" && operator.elite === 2){
+        if(operator.op_id === "char_163_hpsts" && operator.elite === 2){
             buffs.sum_of_cap_above_16 += 19;
         }
         // Bubble's skill takes precedence over Vermeil's skill
-        if(operator.id === "char_381_bubble"){
+        if(operator.op_id === "char_381_bubble"){
             buffs.is_bubble_absent = 0;
         }
         // has_wild_mane (Wild Mane) - check necessary since WM shares the same skill with other PS
-        if(operator.id === "char_496_wildmn"){
+        if(operator.op_id === "char_496_wildmn"){
             buffs.has_wild_mane = 1;
         }
         // A1 operator count (Fang alter)
-        if(a1Operators.includes(operator.id)){
+        if(a1Operators.includes(operator.op_id)){
             buffs.A1_operator_count += 1;
         }
         // Blacksteel Worldwide count (Almond)
-        if(bswOperators.includes(operator.id)){
+        if(bswOperators.includes(operator.op_id)){
             bswOpInBase += 1;
         }
         // Warmy present for Alanna buff
-        if(operator.id === "char_4081_warmy"){
+        if(operator.op_id === "char_4081_warmy"){
            buffs.is_warmy_present = 1;
         }
         // Waai Fu productivity copy, track highest PD

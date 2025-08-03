@@ -18,8 +18,8 @@ const BASELINE_FAC_GOLD_PER_DAY = 20;
  * of 4-bars orders and Tailoring alpha/beta to increase the frequency at which said 4-bars
  * orders show up.
  * @param {Roster} roster: all operators owned by the player.
- * @returns {Object}: with "rosmonPD" and "ebenPD" and their respective productivity
- * given the other operators
+ * @returns {Object}: listing operators used, their promotion level and expected productivity
+ * for the TP as well as the expected saved productivity from Tequila's skills.
  */
 const evalShamare = (roster) => {
     let results = {
@@ -89,19 +89,18 @@ const evalShamare = (roster) => {
     + weights[1] * barValueDefault * 3
     + weights[2] * barValueTequila * 4;
 
-    // Get the weighted time
-    let times = tpOrders.time;
     let weightedTime =
-        weights[0] * times[2]
-      + weights[1] * times[3]
-      + weights[2] * times[4];
+        weights[0] * tpOrders.time[2]
+      + weights[1] * tpOrders.time[3]
+      + weights[2] * tpOrders.time[4];
 
     // Divide both for estimated PD (TP3 as a baseline)
     let lmdPerDay = weightedLMDValue * MN_PER_DAY / weightedTime;
     let pdGainOverBaseline = lmdPerDay / tpDailyLmd[2];
     results.equivalentTpPd = roundTo(
-        (pdGainOverBaseline * SHAM_FULL_TP_PD - SHAM_FULL_TP_PD + SHAM_CONTRIB) * 100
-    , 2) 
+            (pdGainOverBaseline * SHAM_FULL_TP_PD - SHAM_FULL_TP_PD + SHAM_CONTRIB) * 100
+            , 2
+        )
     ;
 
     // ============= Calculating saved FAC PD =============

@@ -1,3 +1,5 @@
+import { checkOperatorCount } from "../evalHelpers.mjs";
+
 /**
  * Evaluate the player's roster to see whether it's viable to run PI/SR.
  * @param {Array[Operator]} operators: list of operators owned by the player, as imported
@@ -49,7 +51,7 @@ const evalGlasgow = (roster) => {
         }
     }
 
-    let currCount = this.__checkOperatorCount(isMorganUsed, isSiegeUsed, isIndraUsed, isDagdaUsed);
+    let currCount = checkOperatorCount(isMorganUsed, isSiegeUsed, isIndraUsed, isDagdaUsed);
     if(currCount < 3){
         // Indra check
         let indra = roster["char_155_tiger"];
@@ -59,7 +61,7 @@ const evalGlasgow = (roster) => {
         }
 
         // Dagda check
-        currCount = this.__checkOperatorCount(isMorganUsed, isSiegeUsed, isIndraUsed, isDagdaUsed);
+        currCount = checkOperatorCount(isMorganUsed, isSiegeUsed, isIndraUsed, isDagdaUsed);
         if(currCount < 3){
             let dagda = roster["char_157_dagda"];
             if(dagda){
