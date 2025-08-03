@@ -14,11 +14,16 @@ import evalWordlyPlight    from "./riicEvaluators/special/evalWordlyPlight.mjs";
 import evalBSW             from "./riicEvaluators/special/evalBSW.mjs";
 
 import evalCoreOperatorFac from "./riicEvaluators/factory/evalCoreOperatorFac.mjs";
+import evalCoreOperatorTp  from "./riicEvaluators/tradingPost/evalCoreOperatorTp.mjs";
 
 import evalPozyGLP from "./riicEvaluators/tradingPost/evalPozyGLP.mjs";
 import evalShamare from "./riicEvaluators/tradingPost/evalShamare.mjs";
 
-import { vermeilBubbleTeamCandidates } from "data/riic/operators";
+import { vermeilBubbleTeamCandidates, jayeCandidates } from "data/riic/operators";
+
+const VERMEIL_ID = "char_190_clour";
+const BUBBLE_ID = "char_381_bubble";
+const JAYE_ID = "char_272_strong";
 
 /**
   * Using a list of input operators and a base setup, sends back a 3-tiered rotation
@@ -32,11 +37,14 @@ import { vermeilBubbleTeamCandidates } from "data/riic/operators";
   * to ensure they have access to relevant skills.
   */
 export const planify = (roster, base, isMoraleMicro, assumePromotionLevel) => {
+    let upgradedOps = [];
     if(assumePromotionLevel > 0){
         for(let operator of Object.values(roster)){
             // Jaye gets special treatment as the only op who gets situational nerfs at E1
-            if(operator.elite < assumePromotionLevel && operator.op_id !== "char_272_strong"){
+            if(operator.elite < assumePromotionLevel && operator.op_id !== JAYE_ID){
                 operator.elite = parseInt(assumePromotionLevel);
+                // We keep track of operators that have been upgraded for later
+                upgradedOps.push(operator);
             }
         }
     }
@@ -77,11 +85,11 @@ export const planify = (roster, base, isMoraleMicro, assumePromotionLevel) => {
     // ---------- Teams ----------
 
     let vermeilScore = evalCoreOperatorFac(
-        roster, base, "char_190_clour", vermeilBubbleTeamCandidates, 1
+        roster, base, VERMEIL_ID, vermeilBubbleTeamCandidates, 1
     );
     console.log(vermeilScore);
     let bubbleScore = evalCoreOperatorFac(
-        roster, base, "char_381_bubble", vermeilBubbleTeamCandidates, 1
+        roster, base, BUBBLE_ID, vermeilBubbleTeamCandidates, 1
     );
     console.log(bubbleScore);
 
@@ -93,12 +101,30 @@ export const planify = (roster, base, isMoraleMicro, assumePromotionLevel) => {
     // ---------- Teams ----------
     let shamareScore = evalShamare(roster);
     console.log(shamareScore);
-    //let penguinScore = this.evalPenguinLogistics(roster);
-    //console.log(penguinScore);
     let pozyGLPScore = evalPozyGLP(roster, base);
     console.log(pozyGLPScore);
-    // TODO: E0 Jaye
-    // TODO: E1 Jaye
+    // If Jaye is currently E0, run an eval for both his E0 and E1 versions
+    let e0JayeScore = { "isJayeUsed": false };
+    let e1JayeScore = { "isJayeUsed": false };
+    let jaye = roster[JAYE_ID];
+    if(jaye?.elite === 0){
+        e0JayeScore = evalCoreOperatorTp(
+            roster, base, JAYE_ID, jayeCandidates, 0
+        );
+        jaye.elite = 1;
+        e1JayeScore = evalCoreOperatorTp(
+            roster, base, JAYE_ID, jayeCandidates, 1
+        );
+        jaye.elite = 0;
+    // Otherwise just run it for E1
+    }else if(jaye){
+        e1JayeScore = evalCoreOperatorTp(
+            roster, base, JAYE_ID, jayeCandidates, 1
+        );
+    }
+    console.log(e0JayeScore);
+    console.log(e1JayeScore);
+
     // TODO: Proviso
 
     // ---------- Singles ----------

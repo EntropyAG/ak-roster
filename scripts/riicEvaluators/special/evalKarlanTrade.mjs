@@ -7,7 +7,7 @@ import { composeSquadsOf3, getTradingPostStats } from "../evalHelpers.mjs";
  * @returns {Object}: with "rosmonPD" and "ebenPD" and their respective productivity
  * given the other operators
  */
-const evalKarlanTrade = (roster) => {
+const evalKarlanTrade = (roster, base) => {
     let gnosis = roster["char_206_gnosis"];
     let swireAlt = roster["char_1033_swire2"];
     let silverAsh = roster["char_172_svrash"];
@@ -29,8 +29,9 @@ const evalKarlanTrade = (roster) => {
     let squads = composeSquadsOf3(operatorsToTest);
     let bestPerforming;
     for(let squad of squads){
-        let results = getTradingPostStats(squad, isGnosisUsed);
+        let results = getTradingPostStats(squad, base, isGnosisUsed);
         if(!bestPerforming || results.totalProductivity > bestPerforming.totalProductivity){
+            console.log("replacing");
             bestPerforming = results;
         }
     }

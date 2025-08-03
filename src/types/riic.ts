@@ -90,4 +90,14 @@ export class Riic {
 		}
 		return count;
 	}
+
+	getDifferentRecipesCount(){
+		let recipes: (string | undefined)[] = [];
+		for(let facility of this.production){
+			if(facility.type === "FAC" && !recipes.includes(facility.product)){
+				recipes.push(facility.product);
+			}
+		}
+		return recipes.length;
+	}
 };
