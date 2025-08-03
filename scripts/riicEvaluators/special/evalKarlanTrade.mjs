@@ -31,7 +31,6 @@ const evalKarlanTrade = (roster, base) => {
     for(let squad of squads){
         let results = getTradingPostStats(squad, base, isGnosisUsed);
         if(!bestPerforming || results.totalProductivity > bestPerforming.totalProductivity){
-            console.log("replacing");
             bestPerforming = results;
         }
     }

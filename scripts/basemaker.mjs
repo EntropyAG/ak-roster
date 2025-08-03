@@ -53,103 +53,65 @@ export const planify = (roster, base, isMoraleMicro, assumePromotionLevel) => {
      ********** Evaluating combos and available operators **********
      ***************************************************************/
 
-    // ========== SPECIAL ==========
+    let scores = {
+        // ========== SPECIAL ==========
+        spl_piSrSquad: evalPiSr(roster, base, isMoraleMicro),
+        spl_wpSquad: evalWordlyPlight(roster, base, isMoraleMicro),
+        spl_automation: evalAutomation(roster, base),
+        spl_pinus: evalPinusSylvestris(roster, base),
+        spl_glasgow: evalGlasgow(roster, base),
+        spl_karlan: evalKarlanTrade(roster, base),
+        spl_monhun: evalMonsterHunter(roster),
+        spl_abyHunt: evalAbyssalHunters(roster),
+        spl_jessBSW: evalBSW(roster),
+        spl_dunMes: evalDungeonMeshi(roster, base),
+        spl_babel: evalBabel(roster),
+        spl_pudding: evalPudding(roster),
 
-    let piSrSquadScore = evalPiSr(roster, base, isMoraleMicro);
-    console.log(piSrSquadScore);
-    let wpSquadScore = evalWordlyPlight(roster, base, isMoraleMicro);
-    console.log(wpSquadScore);
-    let automationScore = evalAutomation(roster, base);
-    console.log(automationScore);
-    let pinusScore = evalPinusSylvestris(roster, base);
-    console.log(pinusScore);
-    let glasgowScore = evalGlasgow(roster, base);
-    console.log(glasgowScore);
-    let karlanScore = evalKarlanTrade(roster, base);
-    console.log(karlanScore);
-    let monhunScore = evalMonsterHunter(roster);
-    console.log(monhunScore);
-    let abyHuntScore = evalAbyssalHunters(roster);
-    console.log(abyHuntScore);
-    let jessBSWScore = evalBSW(roster);
-    console.log(jessBSWScore);
-    let dunMesScore = evalDungeonMeshi(roster, base);
-    console.log(dunMesScore);
-    let babelScore = evalBabel(roster);
-    console.log(babelScore);
-    let puddingScore = evalPudding(roster);
-    console.log(puddingScore);
+        // ========== FACTORY ==========
 
-    // ========== FACTORY ==========
+        // ---------- Teams ----------
 
-    // ---------- Teams ----------
+        fac_vermeil: evalCoreOperatorFac(roster, base, VERMEIL_ID, vermeilBubbleTeamCandidates, 1),
+        fac_bubble: evalCoreOperatorFac(roster, base, BUBBLE_ID, vermeilBubbleTeamCandidates, 1),
 
-    let vermeilScore = evalCoreOperatorFac(
-        roster, base, VERMEIL_ID, vermeilBubbleTeamCandidates, 1
-    );
-    console.log(vermeilScore);
-    let bubbleScore = evalCoreOperatorFac(
-        roster, base, BUBBLE_ID, vermeilBubbleTeamCandidates, 1
-    );
-    console.log(bubbleScore);
+        // ---------- Singles ----------
 
+        // ========== TRADING POST ==========
 
-    // ---------- Singles ----------
+        // ---------- Teams ----------
+        tp_shamare: evalShamare(roster),
+        tp_pozyGLP: evalPozyGLP(roster, base),
+        tp_e0Jaye: evalCoreOperatorTp(roster, base, JAYE_ID, jayeCandidates, 0, 0),
+        tp_e1Jaye: evalCoreOperatorTp(roster, base, JAYE_ID, jayeCandidates, 1),
 
-    // ========== TRADING POST ==========
+        // TODO: Proviso
 
-    // ---------- Teams ----------
-    let shamareScore = evalShamare(roster);
-    console.log(shamareScore);
-    let pozyGLPScore = evalPozyGLP(roster, base);
-    console.log(pozyGLPScore);
-    // If Jaye is currently E0, run an eval for both his E0 and E1 versions
-    let e0JayeScore = { "isJayeUsed": false };
-    let e1JayeScore = { "isJayeUsed": false };
-    let jaye = roster[JAYE_ID];
-    if(jaye?.elite === 0){
-        e0JayeScore = evalCoreOperatorTp(
-            roster, base, JAYE_ID, jayeCandidates, 0
-        );
-        jaye.elite = 1;
-        e1JayeScore = evalCoreOperatorTp(
-            roster, base, JAYE_ID, jayeCandidates, 1
-        );
-        jaye.elite = 0;
-    // Otherwise just run it for E1
-    }else if(jaye){
-        e1JayeScore = evalCoreOperatorTp(
-            roster, base, JAYE_ID, jayeCandidates, 1
-        );
-    }
-    console.log(e0JayeScore);
-    console.log(e1JayeScore);
+        // ---------- Singles ----------
 
-    // TODO: Proviso
+        // ========== RECEPTION ROOM ==========
 
-    // ---------- Singles ----------
+        // ---------- Teams ----------
+        // Any team that requires both operators
 
-    // ========== RECEPTION ROOM ==========
+        // ---------- Solos ----------
+        // Any operator that requires the 2nd slot to be empty
 
-    // ---------- Teams ----------
-    // Any team that requires both operators
+        // ---------- Singles ----------
 
-    // ---------- Solos ----------
-    // Any operator that requires the 2nd slot to be empty
+        // ========== POWER PLANT ==========
 
-    // ---------- Singles ----------
-
-    // ========== POWER PLANT ==========
-
-    // ========== HUMAN RESOURCES (OFFICE) ==========
+        // ========== HUMAN RESOURCES (OFFICE) ==========
 
 
-    // ========== CONTROL CENTER ==========
+        // ========== CONTROL CENTER ==========
 
-    // TODO: Alter morale squad
-    // TODO: Lee agency
-    // TODO: Mlynar smiley squad
-
+        // TODO: Alter morale squad
+        // TODO: Lee agency
+        // TODO: Mlynar smiley squad
+    };
+    console.log(scores);
+    console.log(upgradedOps);
 
     /********************************************************************
      ********** Planning the rotations based on above findings **********

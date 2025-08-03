@@ -78,16 +78,16 @@ const evalShamare = (roster) => {
     // ============= Calculating Trading post PD =============
     // Get the weighted value of LMD produced for 4-bars orders
     let weights = tpOrders.weights[1];
-    if(results.beta >= 0){
+    if(results.beta >= 1){
         weights = tpOrders.weights[3];
     }else if(results.alpha >= 2){
         weights = tpOrders.weights[2];
     }
 
     let weightedLMDValue =
-      weights[0] * barValueDefault * 2
-    + weights[1] * barValueDefault * 3
-    + weights[2] * barValueTequila * 4;
+        weights[0] * barValueDefault * 2
+      + weights[1] * barValueDefault * 3
+      + weights[2] * barValueTequila * 4;
 
     let weightedTime =
         weights[0] * tpOrders.time[2]
@@ -121,10 +121,12 @@ const evalShamare = (roster) => {
 
     // Tequila provides extra LMD value only on 4-bar orders, hence 2/3-bars orders can be ignored.
     // The added value is either 250 LMD (0.5 bar) or 500 LMD (1 bar)
-    let weightedExtraBarsPerOrder = weights[2] * (tequila.elite === 2 ? 1 : 0.5);
-    let weightedGoldBonus = weightedExtraBarsPerOrder * MN_PER_DAY / weightedTime / BASELINE_FAC_GOLD_PER_DAY;
-    let goldContribution = weightedGoldBonus * SHAM_FULL_TP_PD;
-    results.equivalentFacPd = roundTo(goldContribution * 100, 2);
+    if(tequila){
+        let weightedExtraBarsPerOrder = weights[2] * (tequila.elite === 2 ? 1 : 0.5);
+        let weightedGoldBonus = weightedExtraBarsPerOrder * MN_PER_DAY / weightedTime / BASELINE_FAC_GOLD_PER_DAY;
+        let goldContribution = weightedGoldBonus * SHAM_FULL_TP_PD;
+        results.equivalentFacPd = roundTo(goldContribution * 100, 2);
+    }
     return results;
 };
 

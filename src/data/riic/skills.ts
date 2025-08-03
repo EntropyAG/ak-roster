@@ -212,7 +212,7 @@ export const riicSkills = {
     // Totter E0
     "manu_prod_spd_reduce[000]":{
         "productivity_flat": 30,
-        "productivity_reduction_per_4_morale_difference": 5
+        "productivity_per_4_morale_difference": -5
     },
     // Totter E2
     "manu_prod_spd_addition&cost[000]":{
@@ -444,6 +444,14 @@ export const riicSkills = {
     // Snowsant E2
     "trade_ord_spd_variable2[001]":{
         "copy_productivity_of_other_ops_every_5_up_to": 35
+    },
+    // Tequila E0
+    "trade_ord_long[000]":{
+        "max_order_extra_lmd_value": 250
+    },
+    // Tequila E2
+    "trade_ord_long[010]":{
+        "max_order_extra_lmd_value": 500
     },
     // Jaye E0
     "trade_ord_limit_count[000]":{

@@ -31,6 +31,24 @@ export const bswOperators = [
     "char_106_franka"   // Franka
 ];
 
+export const lateranoOperators = [
+    "char_302_glaze",   // Ambriel
+    "char_332_archet",  // Archetto
+    "char_271_spikes",  // Arene
+    "char_4188_confes", // Confess-47
+    "char_4036_forcer", // Enforcer
+    "char_279_excu",    // Executor
+    "char_1032_excu2",  // Executor alter
+    "char_300_phenxi",  // Fiammetta
+    "char_498_inside",  // Insider
+    "char_4193_lemuen", // Lemuen
+    "char_213_mostma",  // Mostima
+    "char_192_falco",   // Plume
+    "char_4194_rmixer", // Sankta Miksaparato
+    "char_4015_spuria", // Spuria
+    "char_245_cello",   // Virtuosa
+];
+
 export const vermeilBubbleTeamCandidates = [
     "char_336_folivo",  // Scene
     "char_485_pallas",  // Pallas
