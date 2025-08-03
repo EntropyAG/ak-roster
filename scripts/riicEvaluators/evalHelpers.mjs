@@ -3,7 +3,13 @@ import cnBuildingData from "../ArknightsGameData/zh_CN/gamedata/excel/building_d
 import { roundTo } from "../../src/util/fns/mathUtils.ts";
 
 import { riicSkills } from "../../src/data/riic/skills.ts";
-import { a1Operators, bswOperators, karlanTradeOperators } from "../../src/data/riic/operators.ts";
+import { tpOrders, tpDailyLmd } from "data/riic/tpOrders";
+import {
+    a1Operators,
+    bswOperators,
+    karlanTradeOperators,
+    lateranoOperators
+} from "../../src/data/riic/operators.ts";
 
 const TP_CAPS = {
     1: 6,
@@ -11,11 +17,14 @@ const TP_CAPS = {
     3: 10
 };
 
+const MN_PER_DAY = 24 * 60;
+const BASELINE_FAC_GOLD_PER_DAY = 20;
+
 /**
  * Returns only RIIC skills that are currently active for a given operator, based
  * on their operator and promotion levels.
  * @param {Operator} operator
- * @returns 
+ * @returns
  */
 export const getActiveOperatorRiicSkills = (operator) => {
     let activeSkills = [];
@@ -54,7 +63,15 @@ export const checkOperatorCount = (...opsUsed) => {
  * Given a list of 3 operators, return the expected stats for a lvl 3 trading post
  * @param  {Array[Operator]} ops: An array containing 2 or 3 operators (functions with less)
  */
-export const getTradingPostStats = (ops, base, gnosisBuff = false, tpLvl = 3) => {
+export const getTradingPostStats = (
+    ops,
+    base,
+    gnosisBuff = false,
+    tpLvl = 3,
+    inesInBase = 0,
+    wInBase = 0,
+    ulpianusInBase = 0
+) => {
     // As provided by the various operators, does not include the TP one
     let buffs = {
         "productivity_flat": 0,
@@ -81,12 +98,27 @@ export const getTradingPostStats = (ops, base, gnosisBuff = false, tpLvl = 3) =>
         // Lemuen
         "productivity_if_exusiai_present": 0,
         "is_exusiai_present": 0,
+        // Exusiai alter
+        "laterano_op_count": 0,
+        "productivity_per_laterano": 0,
         // Archetto
         "productivity_per_dorm": 0,
         // Quartz
         "productivity_per_recipe": 0,
         // Rose Salt
-        "cap_per_trading_post_level": 0
+        "cap_per_trading_post_level": 0,
+        // Hoederer
+        "productivity_if_ines_working": 0,
+        "productivity_if_ines_or_w_working": 0,
+        // Underflow
+        "productivity_if_ulpianus_in_base": 0,
+        // Tailoring (Kafka, Bibeak, Paprika, Diamante, Shamare)
+        "tailoring_alpha": 0,
+        "tailoring_beta": 0,
+        // Tequila
+        "max_order_extra_lmd_value": 0,
+        // Snowsant
+        "copy_productivity_of_other_ops_every_5_up_to": 0
     };
 
     for(let operator of ops){
@@ -105,11 +137,16 @@ export const getTradingPostStats = (ops, base, gnosisBuff = false, tpLvl = 3) =>
             buffs.productivity_flat -= 15;
             buffs.cap_flat += 6;
         }
+
+        // Laterano op check for Exu alter
+        if(lateranoOperators.includes(operator.op_id)){
+            buffs.laterano_op_count++;
+        }
     }
 
     let tpDefaultCap = TP_CAPS[tpLvl];
 
-    let totalProductivity =
+    let totalTpProductivity =
         // Standard productivity
         buffs.productivity_flat
         // Degenbrecher (not debuffed by Jaye)
@@ -122,36 +159,84 @@ export const getTradingPostStats = (ops, base, gnosisBuff = false, tpLvl = 3) =>
         + buffs.productivity_per_reception_room_level * base.receptionRoom
         // Siege alter
         + buffs.productivity_if_another_op_present * Math.min(1, ops.length - 1)
-        // Lemuen / Exusiai
+        // Lemuen
         + buffs.is_exusiai_present * buffs.productivity_if_exusiai_present
+        // Exusiai alter
+        + buffs.productivity_per_laterano * buffs.laterano_op_count
         // Archetto
         + buffs.productivity_per_dorm * base.getSumOfDormLevels()
         // Quartz
         + buffs.productivity_per_recipe * base.getDifferentRecipesCount()
+        // Hoederer
+        + buffs.productivity_if_ines_working * inesInBase
+        + buffs.productivity_if_ines_or_w_working * Math.max(inesInBase, wInBase)
+        // Underflow
+        + buffs.productivity_if_ulpianus_in_base * ulpianusInBase
+    ;
+
+    // Snowsant
+    totalTpProductivity +=
+        Math.floor(
+            Math.min(buffs.copy_productivity_of_other_ops_every_5_up_to / 5, totalTpProductivity / 5) * 5
+        )
     ;
 
     let bonusCap =
         buffs.cap_flat
         // Jaye exclusive, cap reduction based on other ops productivity
-        + buffs.cap_per_10_external_productivity * Math.floor(totalProductivity / tpDefaultCap)
+        + buffs.cap_per_10_external_productivity * Math.floor(totalTpProductivity / tpDefaultCap)
         // Texas / Lappland
         + buffs.is_texas_present * buffs.is_lappland_present * buffs.cap_flat_if_texas_present
         // Rose Salt
         + buffs.cap_per_trading_post_level * tpLvl
     ;
-    console.log(ops[0].op_id + " - " + ops[1].op_id + " - " + ops[2].op_id);
-    console.log(buffs);
-    console.log("Bonus cap", bonusCap);
-    console.log("Total PD before Jaye/Swirealt", totalProductivity);
-    totalProductivity += 0
+
+    totalTpProductivity +=
     // Jaye exclusive
-    + (
+    (
         + buffs.productivity_per_total_cap * (bonusCap + tpDefaultCap)
         + buffs.productivity_per_diff_max_to_current * (bonusCap + tpDefaultCap)
     ) / 2
     // Swire alter exclusive
     + buffs.productivity_per_external_cap * bonusCap;
-    console.log("Total PD after Jaye/Swirealt", totalProductivity);
+
+    // Tailoring buffs + Tequila
+    let eqFacProductivity = 0;
+    if(buffs.tailoring_alpha > 0 || buffs.tailoring_beta > 0){
+        let weightIdx = 0;
+        if(buffs.tailoring_beta >= 1){
+            weightIdx = 3;
+        }else if(buffs.tailoring_alpha >= 2){
+            weightIdx = 2;
+        }else if(buffs.tailoring_alpha === 1){
+            weightIdx = 1;
+        }
+        let weights = tpOrders.weights[weightIdx];
+
+        let weightedLMDValue =
+            weights[0] * (tpOrders.goldValues[0] * 2)
+          + weights[1] * (tpOrders.goldValues[0] * 3)
+          + weights[2] * (tpOrders.goldValues[0] * 4 +  buffs.max_order_extra_lmd_value);
+
+        let weightedTime =
+            weights[0] * tpOrders.time[2]
+          + weights[1] * tpOrders.time[3]
+          + weights[2] * tpOrders.time[4];
+
+        // Divide both for estimated PD (TP3 as a baseline)
+        let lmdPerDay = weightedLMDValue * MN_PER_DAY / weightedTime;
+        let pdGainOverBaseline = lmdPerDay / tpDailyLmd[tpLvl - 1];
+        totalTpProductivity += roundTo(pdGainOverBaseline * (1 + totalTpProductivity / 100) * 100, 2);
+
+        // Gold contrib
+        let tequila = ops["char_486_takila"];
+        if(buffs.max_order_extra_lmd_value > 0){
+            let weightedExtraBarsPerOrder = weights[2] * (tequila.elite === 2 ? 1 : 0.5);
+            let weightedGoldBonus = weightedExtraBarsPerOrder * MN_PER_DAY / weightedTime / BASELINE_FAC_GOLD_PER_DAY;
+            let goldContribution = weightedGoldBonus * (100 + totalTpProductivity) / 100;
+            eqFacProductivity = roundTo(goldContribution * 100, 2);
+        }
+    }
 
     return {
         "operator1": ops[0],
@@ -159,23 +244,28 @@ export const getTradingPostStats = (ops, base, gnosisBuff = false, tpLvl = 3) =>
         "operator3": ops[2],
         "bonusCap": bonusCap,
         "totalCap": bonusCap + tpDefaultCap,
-        "totalProductivity": totalProductivity
+        "totalProductivity": totalTpProductivity + eqFacProductivity,
+        "tpProductivity": totalTpProductivity,
+        "facProductivity": eqFacProductivity
     };
 };
 
 
 /**
  * Given a list of 3 operators, return the expected stats for a factory
- * TODO: Take into account Totter's lower morale for his (de)buffs
- * TODO: Implement Waai Fu
- * TODO: restructure arguments
  * @param  {Array[Operator]} ops: An array containing 2 or 3 operators (functions with less)
  * @param  {Array[Object]} base: An array listing details about the base (number of dorms,
  * FAC & TP distribution...)
  */
-export const getFactoryStats = (ops, base,
-    hasVivianaBuff = 0, hasFlametailBuff = 0, hasJKinPP = 0,
-    bswOpInBase = 0, robotsInPPCount = 0, isGummyInTP = 0,
+export const getFactoryStats = (
+    ops,
+    base,
+    hasVivianaBuff = 0,
+    hasFlametailBuff = 0,
+    hasJKinPP = 0,
+    bswOpInBase = 0,
+    robotsInPPCount = 0,
+    isGummyInTP = 0,
     monsterMealCount = 0
 ) => {
     // As provided by the various operators
@@ -239,6 +329,7 @@ export const getFactoryStats = (ops, base,
         // Totter
         "productivity_flat_if_morale_diff_gt_12": 0,
         "cap_flat_if_morale_diff_gt_12": 0,
+        "productivity_per_4_morale_difference": 0
     };
     // We keep adding all the operator skills to the list of buffs...
     for(let operator of ops){
@@ -281,8 +372,6 @@ export const getFactoryStats = (ops, base,
         if(operator.op_id === "char_4081_warmy"){
            buffs.is_warmy_present = 1;
         }
-        // Waai Fu productivity copy, track highest PD
-        // TODO: Find out how to do this crap, WTF
     }
     // Generalistic
     let allPD = 0
@@ -314,28 +403,61 @@ export const getFactoryStats = (ops, base,
             * buffs.productivity_per_8_engineering_robot
         )
         + buffs.productivity_per_monster_meal * monsterMealCount // Marcille with external Senshi buff
-        + buffs.productivity_flat_if_morale_diff_gt_12 // Totter, here assumed to never fall below 12 morale
+        /**
+         * Totter - very messy due to vastly different PD, would require taking into account 12h+ rotations
+         * for accurate results, so here's a somewhat weighted PD modifier.
+         * Numbers match the number of stacks per every 4h >=12 morale (so 24, 20, 16 and 12), divided
+         * by the number of weights. Basically, it's the same as multiplying by 0.75, but the point is to make
+         * it clear that the skill is more complex than that
+         */
+        + buffs.productivity_per_4_morale_difference * (0 + 1 + 2 + 3) / 4
     ;
+
     // Gold only
     let goldPD = 0
         + buffs.productivity_gold_flat
-        + buffs.productivity_gold_per_dorm_sum * 20 // TODO: replace by actual sum of dorms
-        + buffs.productivity_gold_per_trading_post * 2 // TODO: replace by actual number of TPs
+        // Narantuya
+        + buffs.productivity_gold_per_dorm_sum * base.getSumOfDormLevels()
+        // Jessicat alter buff (CC)
         + buffs.productivity_gold_per_BSW_operator * bswOpInBase // Doesn't check just the current FAC
+        // Alanna
         + buffs.productivity_gold_per_robot_in_pp * robotsInPPCount
-        + buffs.alanna_give_me_a_hand * buffs.is_warmy_present * 15 // 15% if both Warmy & Alanna present
+        + buffs.alanna_give_me_a_hand * buffs.is_warmy_present * 15
+        // Flametail (CC)
         + buffs.pinus_sylvestris_skill_count * hasFlametailBuff * -10
     ;
     // EXP only
     let expPD = 0
         + buffs.productivity_exp_flat
+        // Leto
         + buffs.leto_through_thick_and_thin * isGummyInTP * 35
+        // Flametail (CC)
         + buffs.pinus_sylvestris_skill_count * hasFlametailBuff * 10
         // Vermeil
         + buffs.cap_exp_flat * buffs.productivity_per_total_cap_vermeil * buffs.is_bubble_absent
         // Bubble
         + buffs.cap_exp_flat * buffs.productivity_per_total_cap_bubble
     ;
+
+    /**
+     * Waai Fu
+     * -
+     * Special conditions, because she doesn't work with Automation / Abyssal hunters (handled elsewhere)
+     * and most importantly Purestream, hence why it's added separately
+     */
+    allPD +=
+        Math.floor(
+            Math.min(
+                buffs.waai_fu_copy_productivity / 5,
+                (allPD + goldPD) / 5,
+                (allPD + expPD) / 5
+            ) * 5
+        )
+    ;
+
+    // Purestream
+    goldPD += buffs.productivity_gold_per_trading_post * base.getTradingPostCount();
+
     return {
         "operator1": ops[0],
         "operator2": ops[1],
