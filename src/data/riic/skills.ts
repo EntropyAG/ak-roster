@@ -394,6 +394,14 @@ export const riicSkills = {
     "trade_ord_spd&share[000]":{
         "productivity_to_others": 15
     },
+    // Kichisei E0
+    "trade_ord_spd&share[001]":{
+        "productivity_to_others": 10
+    },
+    // Kichisei E2
+    "trade_ord_spd&share[002]":{
+        "productivity_to_others": 20
+    },
     // Gummy E0, Catapult E0, Midnight E0
     "trade_ord_spd&cost[000]":{
         "productivity_flat": 30
@@ -785,7 +793,7 @@ export const riicSkills = {
     "meet_spd[032]":{
         "clue_speed": 25
     },
-    // Vulpisfoglia E0
+    // Vulpisfoglia E0, Matsukiri E0
     "meet_spd[1000]":{
         "clue_speed": 10
     },
@@ -952,6 +960,10 @@ export const riicSkills = {
     "hire_spd[011]":{
         "hire_speed": 45
     },
+    // Haruka E2
+    "hire_spd[012]":{
+        "hire_speed": 45
+    },
     // Nightmare E2, Utage E0, Orchid E0
     "hire_spd[020]":{
         "hire_speed": 40
@@ -1090,6 +1102,10 @@ export const riicSkills = {
     "control_train_spd[011]":{
         "specialization_training_speed": 5
     },
+    // Hoshiguma alter E0
+    "control_train_spd[012]":{
+        "specialization_training_speed": 5
+    },
     // Amiya E0
     "control_tra_spd[000]":{
         "trading_post_productivity": 7
@@ -1113,6 +1129,10 @@ export const riicSkills = {
     // Mon3tr E2
     "control_prod_spd[1000]":{
         "factory_productivity": 2
+    },
+    // Hoshiguma alter E2
+    "control_token_prod_spd3[000]":{
+        "factory_productivity_if_LGD_in_CC": 3
     },
     // Viviana E2
     "control_prod_fraction[000]":{

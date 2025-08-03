@@ -187,6 +187,7 @@ export const tpOperators = [
     "char_201_moeshd",  // Croissant
     "char_493_firwhl",  // Firewhistle
     "char_4045_heidi",  // Heidi
+    "char_4203_kichi",  // Kichisei
     "char_4147_mitm",   // Mitm
     "char_154_morgan",  // Morgan
     "char_4163_rosesa", // Rose Salt
@@ -256,6 +257,7 @@ export const ppOperators = [
 export const hrOperators = [
     "char_180_amgoat", // Eyja
     "char_4087_ines",  // Ines
+    "char_4202_haruka",// Haruka
     "char_4080_lin",   // Lin
     "char_264_f12yin", // Mountain
     "char_4065_judge", // Penance
@@ -323,6 +325,7 @@ export const rrOperators = [
     "char_4016_kazema", // Kazemaru
     "char_4013_kjera",  // Kjera
     "char_4142_laios",  // Laios
+    "char_4199_makiri", // Matsukiri
     "char_4131_odda",   // Odda
     "char_144_red",     // Projekt Red
     "char_4017_puzzle", // Puzzle
@@ -345,6 +348,7 @@ export const rrOperators = [
 /****************************************
  * ---------- CONTROL CENTER ---------- *
  ****************************************/
+// Missing Yato alter, Hoshi alter and Pudding, but they get their own eval
 export const ccOperatorsFacPd = [
     "char_003_kalts",   // Kal'tsit
     "char_4179_monstr", // Mon3tr
@@ -382,7 +386,9 @@ export const ccOperatorsSmileys = [
 ];
 
 export const ccOperatorsAlterTeam = [
-
+    "char_1011_lava2",  // Lava alter
+    "char_1024_hbisc2", // Hibiscus alter
+    "char_1021_kroos2"  // Kroos alter
 ];
 
 export const ccOperatorsDormRec = [
