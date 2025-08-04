@@ -1,9 +1,8 @@
 import cnBuildingData from "../ArknightsGameData/zh_CN/gamedata/excel/building_data.json";
-import cnCharacterTable from "../ArknightsGameData/zh_CN/gamedata/excel/character_table.json";
+import operators from "data/operators.json";
 
-import { roundTo } from "../../src/util/fns/mathUtils.ts";
-
-import { riicSkills } from "../../src/data/riic/skills.ts";
+import { roundTo } from "util/fns/mathUtils.ts";
+import { riicSkills } from "data/riic/skills.ts";
 import { tpOrders, tpDailyLmd } from "data/riic/tpOrders";
 import {
     a1Operators,
@@ -11,7 +10,7 @@ import {
     karlanTradeOperators,
     lateranoOperators,
     samiOperators
-} from "../../src/data/riic/operators.ts";
+} from "data/riic/operators.ts";
 
 const TP_CAPS = {
     1: 6,
@@ -45,7 +44,7 @@ const BASELINE_FAC_GOLD_PER_DAY = 20;
  * @param {Operator} operator
  * @returns
  */
-export const getActiveOperatorRiicSkills = (operator) => {
+const getActiveOperatorRiicSkills = (operator) => {
     let activeSkills = [];
     for(let buff of cnBuildingData.chars[operator.op_id].buffChar){
       /**
@@ -139,7 +138,6 @@ export const getTradingPostStats = (
         // Snowsant
         "copy_productivity_of_other_ops_every_5_up_to": 0
     };
-
     for(let operator of ops){
         for(let skill of getActiveOperatorRiicSkills(operator)){
             if(!riicSkills[skill.buffId]){
@@ -500,7 +498,6 @@ export const getReceptionRoomStats = (
     base,
     isFiamInDorm = 0,
     isClueExchangeOngoing = 1
-
 ) => {
     // As provided by the various operators
     let buffs = {
@@ -542,11 +539,13 @@ export const getReceptionRoomStats = (
         }
         /**
          * Innate bonuses
-         * All operators provide a buff to clue speed based on their rarity and promotion level
+         * All operators provide a buff to clue speed based on their rarity and promotion level,
+         * on top of a 5% innate bonus no matter who the op is
          */
-        let rarity = parseInt(cnCharacterTable[operator.op_id].rarity.split("_")[1]);
+        let rarity = operators[operator.op_id].rarity;
         buffs.clue_speed += CLUE_SPEED.RARITY[rarity];
         buffs.clue_speed += CLUE_SPEED.ELITE[operator.elite];
+        buffs.clue_speed += 5;
 
         // We exclude Typhoon, since she doesn't count herself for her skill
         if(samiOperators.includes(operator.op_id) && operator.op_id !== "char_2012_typhon"){
