@@ -1,4 +1,5 @@
 import cnBuildingData from "../ArknightsGameData/zh_CN/gamedata/excel/building_data.json";
+import cnCharacterTable from "../ArknightsGameData/zh_CN/gamedata/excel/character_table.json";
 
 import { roundTo } from "../../src/util/fns/mathUtils.ts";
 
@@ -8,13 +9,31 @@ import {
     a1Operators,
     bswOperators,
     karlanTradeOperators,
-    lateranoOperators
+    lateranoOperators,
+    samiOperators
 } from "../../src/data/riic/operators.ts";
 
 const TP_CAPS = {
     1: 6,
     2: 8,
     3: 10
+};
+
+const CLUE_SPEED = {
+    RARITY: {
+        6: 5,
+        5: 4,
+        4: 2,
+        3: 0,
+        2: 0,
+        1: 0
+    },
+    ELITE: {
+        2: 16,
+        1: 8,
+        0: 0
+    }
+
 };
 
 const MN_PER_DAY = 24 * 60;
@@ -150,7 +169,10 @@ export const getTradingPostStats = (
         // Standard productivity
         buffs.productivity_flat
         // Degenbrecher (not debuffed by Jaye)
-        + Math.min(buffs.productivity_per_5_external_cap * Math.floor(buffs.cap_flat / 5), 100)
+        + Math.max(
+            Math.min(buffs.productivity_per_5_external_cap * Math.floor(buffs.cap_flat / 5), 100),
+            0
+        )
         // Firewhistle
         + buffs.productivity_to_others * (ops.length - 1)
         // Texas / Lappy
@@ -202,40 +224,38 @@ export const getTradingPostStats = (
 
     // Tailoring buffs + Tequila
     let eqFacProductivity = 0;
-    if(buffs.tailoring_alpha > 0 || buffs.tailoring_beta > 0){
-        let weightIdx = 0;
-        if(buffs.tailoring_beta >= 1){
-            weightIdx = 3;
-        }else if(buffs.tailoring_alpha >= 2){
-            weightIdx = 2;
-        }else if(buffs.tailoring_alpha === 1){
-            weightIdx = 1;
-        }
-        let weights = tpOrders.weights[weightIdx];
+    let weightIdx = 0;
+    if(buffs.tailoring_beta >= 1){
+        weightIdx = 3;
+    }else if(buffs.tailoring_alpha >= 2){
+        weightIdx = 2;
+    }else if(buffs.tailoring_alpha === 1){
+        weightIdx = 1;
+    }
+    let weights = tpOrders.weights[weightIdx];
 
-        let weightedLMDValue =
-            weights[0] * (tpOrders.goldValues[0] * 2)
-          + weights[1] * (tpOrders.goldValues[0] * 3)
-          + weights[2] * (tpOrders.goldValues[0] * 4 +  buffs.max_order_extra_lmd_value);
+    let weightedLMDValue =
+        weights[0] * (tpOrders.goldValues[0] * 2)
+      + weights[1] * (tpOrders.goldValues[0] * 3)
+      + weights[2] * (tpOrders.goldValues[0] * 4 +  buffs.max_order_extra_lmd_value);
 
-        let weightedTime =
-            weights[0] * tpOrders.time[2]
-          + weights[1] * tpOrders.time[3]
-          + weights[2] * tpOrders.time[4];
+    let weightedTime =
+        weights[0] * tpOrders.time[2]
+      + weights[1] * tpOrders.time[3]
+      + weights[2] * tpOrders.time[4];
 
-        // Divide both for estimated PD (TP3 as a baseline)
-        let lmdPerDay = weightedLMDValue * MN_PER_DAY / weightedTime;
-        let pdGainOverBaseline = lmdPerDay / tpDailyLmd[tpLvl - 1];
-        totalTpProductivity += roundTo(pdGainOverBaseline * (1 + totalTpProductivity / 100) * 100, 2);
+    // Divide both for estimated PD (TP3 as a baseline)
+    let lmdPerDay = weightedLMDValue * MN_PER_DAY / weightedTime;
+    let pdGainOverBaseline = lmdPerDay / tpDailyLmd[tpLvl - 1];
+    totalTpProductivity += roundTo(pdGainOverBaseline - 1, 2);
 
-        // Gold contrib
-        let tequila = ops["char_486_takila"];
-        if(buffs.max_order_extra_lmd_value > 0){
-            let weightedExtraBarsPerOrder = weights[2] * (tequila.elite === 2 ? 1 : 0.5);
-            let weightedGoldBonus = weightedExtraBarsPerOrder * MN_PER_DAY / weightedTime / BASELINE_FAC_GOLD_PER_DAY;
-            let goldContribution = weightedGoldBonus * (100 + totalTpProductivity) / 100;
-            eqFacProductivity = roundTo(goldContribution * 100, 2);
-        }
+    // Gold contrib (how much gold FAC PD we get from Tequila)
+    if(buffs.max_order_extra_lmd_value > 0){
+        let weightedExtraBarsPerOrder = weights[2]
+          * (buffs.max_order_extra_lmd_value === 500 ? 1 : 0.5);
+        let weightedGoldBonus = weightedExtraBarsPerOrder * MN_PER_DAY / weightedTime / BASELINE_FAC_GOLD_PER_DAY;
+        let goldContribution = weightedGoldBonus * (100 + totalTpProductivity) / 100;
+        eqFacProductivity = roundTo(goldContribution * 100, 2);
     }
 
     return {
@@ -419,13 +439,14 @@ export const getFactoryStats = (
         // Narantuya
         + buffs.productivity_gold_per_dorm_sum * base.getSumOfDormLevels()
         // Jessicat alter buff (CC)
-        + buffs.productivity_gold_per_BSW_operator * bswOpInBase // Doesn't check just the current FAC
+        + buffs.productivity_gold_per_BSW_operator * bswOpInBase
         // Alanna
         + buffs.productivity_gold_per_robot_in_pp * robotsInPPCount
         + buffs.alanna_give_me_a_hand * buffs.is_warmy_present * 15
         // Flametail (CC)
         + buffs.pinus_sylvestris_skill_count * hasFlametailBuff * -10
     ;
+
     // EXP only
     let expPD = 0
         + buffs.productivity_exp_flat
@@ -467,6 +488,106 @@ export const getFactoryStats = (
         "totalProductivity": roundTo(allPD, 2),
         "totalExpProductivity": roundTo(allPD + expPD, 2),
         "totalGoldProductivity": roundTo(allPD + goldPD, 2)
+    };
+};
+
+/**
+ * Given a list of up to 2 operators, return the expected stats for the reception room
+ * @param  {Array[Operator]} ops: An array containing 1 or 2 operators
+ */
+export const getReceptionRoomStats = (
+    ops,
+    base,
+    isFiamInDorm = 0,
+    isClueExchangeOngoing = 1
+
+) => {
+    // As provided by the various operators
+    let buffs = {
+        "clue_speed": 0,
+        // Valarqvin
+        "clue_speed_if_typhoon_present": 0,
+        "is_typhoon_present": 0,
+        // Vulpisfoglia
+        "clue_speed_if_suzuran_present": 0,
+        "is_suzuran_present": 0,
+        // Sankta Miksaparato
+        "clue_speed_if_fiammetta_in_dorm": 0,
+        // Typhoon
+        "clue_speed_if_sami_present": 0,
+        "is_sami_present": 0,
+        // Surfer
+        "clue_speed_if_bsw_present": 0,
+        "is_bsw_present": 0,
+        // Caper
+        "clue_speed_if_exchange_ongoing": 0,
+        // Solo-ers
+        "clue_speed_solo": 0,
+        // Windscoot
+        "clue_speed_per_recruitment_slot": 0,
+        // Ines
+        "clue_speed_per_hour_5_stacks": 0
+    };
+
+    for(let operator of ops){
+        for(let skill of getActiveOperatorRiicSkills(operator)){
+            if(!riicSkills[skill.buffId]){
+                continue;
+            }
+            for(let effect of Object.keys(riicSkills[skill.buffId])){
+                if(buffs[effect] !== undefined && skill.buffId.indexOf("meet") === 0){
+                    buffs[effect] += riicSkills[skill.buffId][effect];
+                }
+            }
+        }
+        /**
+         * Innate bonuses
+         * All operators provide a buff to clue speed based on their rarity and promotion level
+         */
+        let rarity = parseInt(cnCharacterTable[operator.op_id].rarity.split("_")[1]);
+        buffs.clue_speed += CLUE_SPEED.RARITY[rarity];
+        buffs.clue_speed += CLUE_SPEED.ELITE[operator.elite];
+
+        // We exclude Typhoon, since she doesn't count herself for her skill
+        if(samiOperators.includes(operator.op_id) && operator.op_id !== "char_2012_typhon"){
+            buffs.is_sami_present = 1;
+        }
+
+        // We exclude Surfer, since she doesn't count herself for her skill
+        if(bswOperators.includes(operator.op_id) && operator.op_id !== "char_4052_surfer"){
+            buffs.is_sami_present = 1;
+        }
+
+        if(operator.op_id === "char_358_lisa"){
+            buffs.is_suzuran_present = 1;
+        }
+    }
+
+    let clueSpeed = buffs.clue_speed
+        // Valarqvin
+        + buffs.clue_speed_if_typhoon_present * buffs.is_typhoon_present
+        // Vulpisfoglia
+        + buffs.clue_speed_if_suzuran_present * buffs.is_suzuran_present
+        // Typhoon
+        + buffs.clue_speed_if_sami_present * buffs.is_sami_present
+        // Surfer
+        + buffs.clue_speed_if_bsw_present * buffs.is_bsw_present
+        // Caper
+        + buffs.clue_speed_if_exchange_ongoing * isClueExchangeOngoing
+        // Sankta Miksaparato
+        + buffs.clue_speed_if_fiammetta_in_dorm * isFiamInDorm
+        // Windscoot
+        + buffs.clue_speed_per_recruitment_slot * base.getRecruitmentSlotsCount()
+        // Solo-ers
+        + buffs.clue_speed_solo * (ops.length === 1 ? 1 : 0)
+        // Ines
+        + buffs.clue_speed_per_hour_5_stacks * (5/2 + 7) / 12 // 12h weighted average
+    ;
+
+    return {
+        "operator1": ops[0],
+        "operator2": ops[1],
+        "clueSpeed": clueSpeed
     };
 };
 

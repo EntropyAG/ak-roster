@@ -53,7 +53,7 @@ const Basemaker: NextPage = () => {
              onChange={handlePromotionChange}
            >
             <option value={0}>No</option>
-            <option value={1} selected>Assume 4* and lower are maxed</option>
+            <option value={1}>Assume 4* and lower are maxed</option>
             <option value={2}>Assume all operators are maxed</option>
           </Select>
           <br className="clear" />

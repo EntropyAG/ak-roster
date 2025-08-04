@@ -100,4 +100,11 @@ export class Riic {
 		}
 		return recipes.length;
 	}
+
+	getRecruitmentSlotsCount(){
+		if(this.office === 0){
+			return 0;
+		}
+		return this.office + 1;
+	}
 };
