@@ -591,6 +591,86 @@ export const getReceptionRoomStats = (
 };
 
 /**
+ * Given an array of 1 to 3 operators, return the expected stats with all the power plants filled
+ * @param  {Array[Operator]} ops: An array containing 1 to 3 operators
+ */
+export const getPowerPlantStats = (
+    ops,
+    base,
+    rhineOpsInBase = 3,
+    isKaltsitInCC = 1,
+    isLogosInTR = 1,
+
+) => {
+    // As provided by the various operators
+    let buffs = {
+        "drone_speed": 0,
+        // Spuria
+        "drone_speed_per_hour_5_stacks": 0,
+        // Justice Knight
+        "productivity_to_wild_mane": 0,
+        // Friston-3
+        "drone_speed_if_kaltsit_in_cc": 0,
+        // Phonor
+        "drone_speed_if_logos_in_tr": 0,
+        // Confess-47
+        "drone_speed_if_laterano_in_other_pp": 0,
+        "has_laterano_in_pp": 0,
+        // Philae
+        "drone_speed_per_total_dorm_level": 0,
+        // Muelsyse
+        "drone_speed_per_rhine_5_stacks": 0,
+        // Greyy alter
+        "drone_speed_per_10_drone_cap": 0
+    };
+
+    for(let operator of ops){
+        for(let skill of getActiveOperatorRiicSkills(operator)){
+            if(!riicSkills[skill.buffId]){
+                continue;
+            }
+            for(let effect of Object.keys(riicSkills[skill.buffId])){
+                if(buffs[effect] !== undefined && skill.buffId.indexOf("power") === 0){
+                    buffs[effect] += riicSkills[skill.buffId][effect];
+                }
+            }
+        }
+
+        // We exclude Confess, since they don't count for their own skill
+        if(lateranoOperators.includes(operator.op_id) && operator.op_id !== "char_4188_confes"){
+            buffs.has_laterano_in_pp = 1;
+        }
+
+    }
+
+    let droneSpeed = buffs.drone_speed
+        // Spuria
+        + buffs.drone_speed_per_hour_5_stacks * (5/2 + 7) / 12 // 12h weighted average
+        // Friston
+        + buffs.drone_speed_if_kaltsit_in_cc * isKaltsitInCC
+        // Phonor
+        + buffs.drone_speed_if_logos_in_tr * isLogosInTR
+        // Confess-47
+        + buffs.drone_speed_if_laterano_in_other_pp * buffs.has_laterano_in_pp
+        // Philae
+        + buffs.drone_speed_per_total_dorm_level * base.getSumOfDormLevels()
+        // Muelsyse
+        + buffs.drone_speed_per_rhine_5_stacks * Math.min(rhineOpsInBase, 5)
+        // Greyy alter
+        + buffs.drone_speed_per_10_drone_cap * base.getDroneCap() / 10
+    ;
+
+    return {
+        "operator1": ops[0],
+        "operator2": ops[1],
+        "operator3": ops[2],
+        "droneSpeed": droneSpeed,
+        "wildmanePd": buffs.productivity_to_wild_mane
+    };
+};
+
+
+/**
  * Given an operator, return the expected hiring speed for the Human Resources/Office
  * @param  {Operator} operator:
  */

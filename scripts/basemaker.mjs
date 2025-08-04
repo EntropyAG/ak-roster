@@ -25,6 +25,8 @@ import evalTpPairs         from "./riicEvaluators/tradingPost/evalTpPairs.mjs";
 
 import evalRRTeams         from "./riicEvaluators/receptionRoom/evalRRTeams.mjs";
 
+import evalPPTeams         from "./riicEvaluators/powerPlant/evalPPTeams.mjs";
+
 import evalOfficeOps       from "./riicEvaluators/office/evalOfficeOps.mjs";
 
 import { vermeilBubbleTeamCandidates, jayeCandidates } from "data/riic/operators";
@@ -99,6 +101,8 @@ export const planify = (roster, base, isMoraleMicro, assumePromotionLevel) => {
         rr_squads: evalRRTeams(roster, base),
 
         // ========== POWER PLANT ==========
+
+        pp_squads: evalPPTeams(roster, base),
 
         // ========== HUMAN RESOURCES (OFFICE) ==========
 

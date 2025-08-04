@@ -629,87 +629,87 @@ export const riicSkills = {
 
     // Castle-3 E0, Friston E0, Justice Knight E0, Lancet-2, Thrm-x E0
     "power_rec_spd[000]":{
-        "productivity": 10
+        "drone_speed": 10
     },
     // Blaze E0, Ifrit E0, Lava E0
     "power_rec_spd[001]":{
-        "productivity": 10
+        "drone_speed": 10
     },
     // Indigo E0
     "power_rec_spd[002]":{
-        "productivity": 10
+        "drone_speed": 10
     },
     // Goldenglow E0, Glaucus E0
     "power_rec_spd[003]":{
-        "productivity": 10
+        "drone_speed": 10
     },
     // Phonor-0 E0
     "power_rec_spd[004]":{
-        "productivity": 10
+        "drone_speed": 10
     },
     // Philae E0
     "power_rec_spd[005]":{
-        "productivity": 10
+        "drone_speed": 10
     },
     // Confess-47 E0
     "power_rec_spd[006]":{
-        "productivity": 10
+        "drone_speed": 10
     },
     // Leizi alter E0
     "power_rec_spd[007]":{
-        "productivity": 10
+        "drone_speed": 10
     },
     // Pudding E0, Shaw E1
     "power_rec_spd[010]":{
-        "productivity": 15
+        "drone_speed": 15
     },
     // Purestream E0
     "power_rec_spd[011]":{
-        "productivity": 15
+        "drone_speed": 15
     },
     // Ifrit E2
     "power_rec_spd[013]":{
-        "productivity": 15
+        "drone_speed": 15
     },
     // Liskarm E0
     "power_rec_spd[014]":{
-        "productivity": 15
+        "drone_speed": 15
     },
     // Glaucus E2
     "power_rec_spd[015]":{
-        "productivity": 15
+        "drone_speed": 15
     },
     // Indigo E1
     "power_rec_spd[017]":{
-        "productivity": 15
+        "drone_speed": 15
     },
     // Greyy E0
     "power_rec_spd[020]":{
-        "productivity": 20
+        "drone_speed": 20
     },
     // Liskarm E2
     "power_rec_spd[021]":{
-        "productivity": 20
+        "drone_speed": 20
     },
     // Lava alter E2
     "power_rec_spd[022]":{
-        "productivity": 20
+        "drone_speed": 20
     },
     // Goldenglow E2
     "power_rec_spd[023]":{
-        "productivity": 20
+        "drone_speed": 20
     },
     // Lucilla E0
     "power_rec_spd[025]":{
-        "productivity": 15
+        "drone_speed": 15
     },
     // Lucilla E2
     "power_rec_spd[026]":{
-        "productivity": 20
+        "drone_speed": 20
     },
     // Blaze alter E2
     "power_rec_spd[1022]":{
-        "productivity": 20
+        "drone_speed": 20
     },
     // Justice Knight E0 30
     "power_prod_spd_P[000]":{
@@ -717,38 +717,38 @@ export const riicSkills = {
     },
     // Friston-3 E0 30
     "power_rec_spd_P[000]":{
-        "productivity_if_kaltsit_in_cc": 5
+        "drone_speed_if_kaltsit_in_cc": 5
     },
     // Phonor-0 E0 30
     "power_rec_spd_P[001]":{
-        "productivity_if_logos_in_tr": 5
+        "drone_speed_if_logos_in_tr": 5
     },
     // Confess-47 E0 30
     "power_rec_spd_ext&faction[000]":{
-        "productivity_if_laterano_in_other_pp": 5
+        "drone_speed_if_laterano_in_other_pp": 5
     },
     // Spuria E0
     "power_rec_spd&addition[000]":{
-        "productivity": 10,
-        "productivity_per_hour_5_stacks": 1
+        "drone_speed": 10,
+        "drone_speed_per_hour_5_stacks": 1
     },
     // Spuria E2 (replaces)
     "power_rec_spd&addition[001]":{
-        "productivity": 15,
-        "productivity_per_hour_5_stacks": 1
+        "drone_speed": 15,
+        "drone_speed_per_hour_5_stacks": 1
     },
     // Philae E2
     "power_rec_spd&dorm&lv[000]":{
-        "productivity_per_dorm_level": 0.5
+        "drone_speed_per_total_dorm_level": 0.5
     },
     // Muelsyse E2
     "power_rec_rhine[000]":{
-        "productivity": 10,
-        "productivity_per_rhine_5_stacks": 3
+        "drone_speed": 10,
+        "drone_speed_per_rhine_5_stacks": 3
     },
     // Greyy alter E0
     "power_rec_drone[000]":{
-        "productivity_per_10_drone_cap": 1
+        "drone_speed_per_10_drone_cap": 1
     },
 
     // ========================== RECEPTION ROOM =============================
