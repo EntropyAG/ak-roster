@@ -1,7 +1,7 @@
-import cnCharacterTable from "../../ArknightsGameData/zh_CN/gamedata/excel/character_table.json";
-import { roundTo } from "../../../src/util/fns/mathUtils.ts";
+import operators from "data/operators.json";
+import { roundTo } from "util/fns/mathUtils.ts";
 
-import { tpOrders, tpDailyLmd } from "../../../src/data/riic/tpOrders.ts";
+import { tpOrders, tpDailyLmd } from "data/riic/tpOrders.ts";
 
 // 2 (200%) = base TP PD (100%) + Shamare (90%) + CC buff (7%) + innate (3%)
 const SHAM_FULL_TP_PD = 2;
@@ -66,7 +66,7 @@ const evalShamare = (roster) => {
         if(!operator){
             continue;
         }
-        let appellation = cnCharacterTable[operator.op_id].appellation.toLocaleLowerCase();
+        let appellation = operators[operator.op_id].name.toLocaleLowerCase();
         results[appellation+"Elite"] = operator.elite;
         if(operator.elite === 2){
             results.beta++;

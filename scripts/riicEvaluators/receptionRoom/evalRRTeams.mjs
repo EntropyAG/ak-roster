@@ -1,6 +1,6 @@
 import { composeSquadsOf2, getReceptionRoomStats } from "../evalHelpers.mjs";
 
-import { rrOperators, rrOperatorsSolo } from "../../../src/data/riic/operators.ts";
+import { rrOperators, rrOperatorsSolo } from "data/riic/operators.ts";
 
 /**
  * Returns a list of TP operators with all their productivity
@@ -15,7 +15,7 @@ const evalRRTeams = (roster,  base) => {
     let squads = composeSquadsOf2(operatorsToTest);
     // Then we add the few ops that have bonuses while alone
     for(let soloer of rrOperatorsSolo){
-        squads.push([soloer]);
+        squads.push([roster[soloer]]);
     }
     // Finally we actually retrieve the score for all teams
     for(let squad of squads){

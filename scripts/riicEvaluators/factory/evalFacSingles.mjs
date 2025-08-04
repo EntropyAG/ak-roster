@@ -1,6 +1,6 @@
 import { getFactoryStats } from "../evalHelpers.mjs";
 
-import { facGeneralistOperators, facExpOperators, facGoldOperators } from "../../../src/data/riic/operators.ts";
+import { facGeneralistOperators, facExpOperators, facGoldOperators } from "data/riic/operators.ts";
 
 /**
  * Returns a list of FAC operators with all their productivity (general, EXP and gold)
