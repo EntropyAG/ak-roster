@@ -591,6 +591,53 @@ export const getReceptionRoomStats = (
 };
 
 /**
+ * Given an operator, return the expected hiring speed for the Human Resources/Office
+ * @param  {Operator} operator:
+ */
+export const getOfficeStats = (
+    operator,
+    base
+) => {
+    // As provided by the various operators
+    let buffs = {
+        "hire_speed": 0,
+        // Tin Man
+        "hire_speed_per_dorm_level": 0,
+        // Lin
+        "hire_speed_per_extra_recruitment_slot": 0,
+        // Tsukinogi, Insider, Mr Nothing
+        "clue_speed_per_extra_recruitment_slot": 0
+    };
+
+    for(let skill of getActiveOperatorRiicSkills(operator)){
+        if(!riicSkills[skill.buffId]){
+            continue;
+        }
+        for(let effect of Object.keys(riicSkills[skill.buffId])){
+            if(buffs[effect] !== undefined && skill.buffId.indexOf("hire") === 0){
+                buffs[effect] += riicSkills[skill.buffId][effect];
+            }
+        }
+    }
+
+    let hireSpeed = buffs.hire_speed
+        // Tin Man
+        + buffs.hire_speed_per_dorm_level * base.getSumOfDormLevels()
+        // Lin
+        + buffs.hire_speed_per_extra_recruitment_slot * base.getExtraRecruitSlotsCount()
+    ;
+
+    // Tsukinogi, Insider, Mr Nothing
+    let clueSpeed = buffs.clue_speed_per_extra_recruitment_slot * base.getExtraRecruitSlotsCount();
+
+    return {
+        "operator": operator,
+        "hireSpeed": hireSpeed,
+        "clueSpeed": clueSpeed
+    };
+};
+
+/**
  * For a list of operators given as input, returns an array containing all combos of 3 operators possible
  * @param {Array[Operator]} operators: A list of at least 3 operators
  */

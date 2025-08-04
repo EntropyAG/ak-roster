@@ -91,6 +91,7 @@ export class Riic {
 		return count;
 	}
 
+	// If at least a FAC produces gold, that's 1 recipe, if another crafts EXP tickets, that's another
 	getDifferentRecipesCount(){
 		let recipes: (string | undefined)[] = [];
 		for(let facility of this.production){
@@ -106,5 +107,15 @@ export class Riic {
 			return 0;
 		}
 		return this.office + 1;
+	}
+
+	// Only counts the recruitment slots added beyond the first 2
+	getExtraRecruitSlotsCount(){
+		if(this.office === 2){
+			return 1;
+		}else if(this.office === 3){
+			return 2;
+		}
+		return 0;
 	}
 };
