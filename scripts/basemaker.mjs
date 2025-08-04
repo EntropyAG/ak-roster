@@ -14,10 +14,16 @@ import evalWordlyPlight    from "./riicEvaluators/special/evalWordlyPlight.mjs";
 import evalBSW             from "./riicEvaluators/special/evalBSW.mjs";
 
 import evalCoreOperatorFac from "./riicEvaluators/factory/evalCoreOperatorFac.mjs";
-import evalCoreOperatorTp  from "./riicEvaluators/tradingPost/evalCoreOperatorTp.mjs";
+import evalFacSingles      from "./riicEvaluators/factory/evalFacSingles.mjs";
+import evalFacPairs        from "./riicEvaluators/factory/evalFacPairs.mjs";
 
-import evalPozyGLP from "./riicEvaluators/tradingPost/evalPozyGLP.mjs";
-import evalShamare from "./riicEvaluators/tradingPost/evalShamare.mjs";
+import evalCoreOperatorTp  from "./riicEvaluators/tradingPost/evalCoreOperatorTp.mjs";
+import evalPozyGLP         from "./riicEvaluators/tradingPost/evalPozyGLP.mjs";
+import evalShamare         from "./riicEvaluators/tradingPost/evalShamare.mjs";
+import evalTpSingles       from "./riicEvaluators/tradingPost/evalTpSingles.mjs";
+import evalTpPairs         from "./riicEvaluators/tradingPost/evalTpPairs.mjs";
+
+import evalRRTeams         from "./riicEvaluators/receptionRoom/evalRRTeams.mjs";
 
 import { vermeilBubbleTeamCandidates, jayeCandidates } from "data/riic/operators";
 
@@ -40,8 +46,7 @@ export const planify = (roster, base, isMoraleMicro, assumePromotionLevel) => {
     let upgradedOps = [];
     if(assumePromotionLevel > 0){
         for(let operator of Object.values(roster)){
-            // Jaye gets special treatment as the only op who gets situational nerfs at E1
-            if(operator.elite < assumePromotionLevel && operator.op_id !== JAYE_ID){
+            if(operator.elite < assumePromotionLevel){
                 operator.elite = parseInt(assumePromotionLevel);
                 // We keep track of operators that have been upgraded for later
                 upgradedOps.push(operator);
@@ -75,7 +80,8 @@ export const planify = (roster, base, isMoraleMicro, assumePromotionLevel) => {
         fac_vermeil: evalCoreOperatorFac(roster, base, VERMEIL_ID, vermeilBubbleTeamCandidates, 1),
         fac_bubble: evalCoreOperatorFac(roster, base, BUBBLE_ID, vermeilBubbleTeamCandidates, 1),
 
-        // ---------- Singles ----------
+        fac_pairs: evalFacPairs(roster, base),
+        fac_singles: evalFacSingles(roster, base),
 
         // ========== TRADING POST ==========
 
@@ -85,19 +91,12 @@ export const planify = (roster, base, isMoraleMicro, assumePromotionLevel) => {
         tp_e0Jaye: evalCoreOperatorTp(roster, base, JAYE_ID, jayeCandidates, 0, 0),
         tp_e1Jaye: evalCoreOperatorTp(roster, base, JAYE_ID, jayeCandidates, 1),
 
-        // TODO: Proviso
-
-        // ---------- Singles ----------
+        tp_singles: evalTpSingles(roster, base),
+        tp_pairs: evalTpPairs(roster, base),
 
         // ========== RECEPTION ROOM ==========
 
-        // ---------- Teams ----------
-        // Any team that requires both operators
-
-        // ---------- Solos ----------
-        // Any operator that requires the 2nd slot to be empty
-
-        // ---------- Singles ----------
+        rr_squads: evalRRTeams(roster, base),
 
         // ========== POWER PLANT ==========
 

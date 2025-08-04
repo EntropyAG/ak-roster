@@ -3,6 +3,9 @@ export const invalidOperators = [
     "char_1037_amiya3"  // Amiya medic
 ];
 
+/**********************************
+ * ---------- FACTIONS ---------- *
+ **********************************/
 export const karlanTradeOperators = [
     "char_173_slchan", // Cliffheart
     "char_172_svrash", // Silverash
@@ -28,7 +31,8 @@ export const bswOperators = [
     "char_240_wyvern",  // Vanilla
     "char_4105_almond", // Almond
     "char_107_liskam",  // Liskarm
-    "char_106_franka"   // Franka
+    "char_106_franka",  // Franka
+    "char_4052_surfer", // Surfer
 ];
 
 export const lateranoOperators = [
@@ -49,6 +53,18 @@ export const lateranoOperators = [
     "char_245_cello",   // Virtuosa
 ];
 
+export const samiOperators = [
+    "char_252_bibeak",  // Bibeak
+    "char_109_fmout",   // Gitano
+    "char_466_qanik",   // Qanipalaat
+    "char_341_sntlla",  // Santalla
+    "char_2012_typhon", // Typhoon
+    "char_4102_threye", // Valarqvin
+];
+
+/************************************
+ * ---------- CANDIDATES ---------- *
+ ************************************/
 export const vermeilBubbleTeamCandidates = [
     "char_336_folivo",  // Scene
     "char_485_pallas",  // Pallas
@@ -294,11 +310,6 @@ export const rrOperatorsSolo = [
     "char_4131_odda",   // Odda
 ];
 
-export const rrOperatorsPairs = [
-    ["char_4026_vulpis", "char_358_lisa"],    // Vulpisfoglia / Suzuran
-    ["char_4102_threye", "char_2012_typhon"], // Valarqvin / Typhoon
-];
-
 export const rrOperators = [
     "char_291_aglina",  // Angelina
     "char_010_chen",    // Ch'en
@@ -311,6 +322,7 @@ export const rrOperators = [
     "char_2012_typhon", // Typhoon
     "char_427_vigil",   // Vigil
     "char_4026_vulpis", // Vulpisfoglia
+    "char_358_lisa",    // Suzuran
     "char_274_astesi",  // Astesia
     "char_294_ayer",    // Ayerscarpe
     "char_275_breeze",  // Breeze

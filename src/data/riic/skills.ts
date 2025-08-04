@@ -830,7 +830,8 @@ export const riicSkills = {
     // Typhoon E0
     "meet_spd&sami[000]":{
         "clue_speed": 10,
-        "clue_speed_if_sami_present": 5
+        "clue_speed_if_sami_present": 5,
+        "is_typhoon_present": 1
     },
     // Surfer E0
     "meet_spd&sami[100]":{
