@@ -77,11 +77,11 @@ const evalShamare = (roster) => {
 
     // ============= Calculating Trading post PD =============
     // Get the weighted value of LMD produced for 4-bars orders
-    let weights = tpOrders.weights[1];
+    let weights = tpOrders.tp3weights[1];
     if(results.beta >= 1){
-        weights = tpOrders.weights[3];
+        weights = tpOrders.tp3weights[3];
     }else if(results.alpha >= 2){
-        weights = tpOrders.weights[2];
+        weights = tpOrders.tp3weights[2];
     }
 
     let weightedLMDValue =

@@ -206,6 +206,7 @@ export const tpOperators = [
     "char_4203_kichi",  // Kichisei
     "char_4147_mitm",   // Mitm
     "char_154_morgan",  // Morgan
+    "char_4032_provs",  // Proviso
     "char_4163_rosesa", // Rose Salt
     "char_4140_lasher", // Sand Reckoner
     "char_383_snsant",  // Snowsant

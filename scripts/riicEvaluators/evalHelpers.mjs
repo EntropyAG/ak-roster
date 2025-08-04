@@ -94,6 +94,8 @@ export const getTradingPostStats = (
     let buffs = {
         "productivity_flat": 0,
         "cap_flat": 0,
+        // Proviso
+        "defaulted_order_extra_bar": 0,
         // Swire alter
         "productivity_per_external_cap": 0,
         // Jaye
@@ -194,7 +196,7 @@ export const getTradingPostStats = (
         + buffs.productivity_if_ulpianus_in_base * ulpianusInBase
     ;
 
-    // Snowsant
+    // Snowsant - added later since she copies the previous productivity up to a cap
     totalTpProductivity +=
         Math.floor(
             Math.min(buffs.copy_productivity_of_other_ops_every_5_up_to / 5, totalTpProductivity / 5) * 5
@@ -220,7 +222,7 @@ export const getTradingPostStats = (
     // Swire alter exclusive
     + buffs.productivity_per_external_cap * bonusCap;
 
-    // Tailoring buffs + Tequila
+    // Tailoring buffs + Tequila + Proviso
     let eqFacProductivity = 0;
     let weightIdx = 0;
     if(buffs.tailoring_beta >= 1){
@@ -230,22 +232,53 @@ export const getTradingPostStats = (
     }else if(buffs.tailoring_alpha === 1){
         weightIdx = 1;
     }
-    let weights = tpOrders.weights[weightIdx];
+    let weights = tpOrders.tp3weights[weightIdx];
+    if(tpLvl === 2){
+        weights = tpOrders.tp2weights[weightIdx];
+    }
 
     let weightedLMDValue =
-        weights[0] * (tpOrders.goldValues[0] * 2)
-      + weights[1] * (tpOrders.goldValues[0] * 3)
-      + weights[2] * (tpOrders.goldValues[0] * 4 +  buffs.max_order_extra_lmd_value);
+        weights[0] * tpOrders.goldValues[0] * (2 + buffs.defaulted_order_extra_bar)
+      + weights[1] * tpOrders.goldValues[0] * (3 + buffs.defaulted_order_extra_bar)
+      + weights[2] * tpOrders.goldValues[0] * 4 +  buffs.max_order_extra_lmd_value;
 
     let weightedTime =
         weights[0] * tpOrders.time[2]
       + weights[1] * tpOrders.time[3]
       + weights[2] * tpOrders.time[4];
 
-    // Divide both for estimated PD (TP3 as a baseline)
+    /**
+     * Divide both for estimated PD (TP3 as a baseline)
+     * Will result in an apparent downgrade of productivity for most operators if the TP being filled is lvl 2.
+     * This is because the baseline remains a lvl 3 TP, which produces very slightly more LMD per day compared
+     * to a lvl 2, which means it's also better to put your best PD ops in the highest level TP if possible,
+     * with the only exception being for Proviso due to how her base skill functions.
+     */
     let lmdPerDay = weightedLMDValue * MN_PER_DAY / weightedTime;
-    let pdGainOverBaseline = lmdPerDay / tpDailyLmd[tpLvl - 1];
-    totalTpProductivity += roundTo(pdGainOverBaseline - 1, 2);
+    // We use a lvl 3 TP as a baseline, even if the current TP level is 2.
+    // This is to better to compare LMD production for with Proviso / Tailoring / Tequila.
+    let pdGainOverBaseline = lmdPerDay / tpDailyLmd[2];
+    /**
+     * This calculation allows tailoring, Tequila and Proviso to be closer to their actual productivity
+     * since they act as multipliers to the final productivity, which includes both innate TP bonuses
+     * like the 1% PD per slot, as well as external buffs like the 7% PD from CC skills like Amiya's or
+     * Swire's.
+     * This will result in a lower performance for everyone else, but the actual order of the best operators
+     * is maintained, which is the entire point of finding out the best ops.
+     */
+    let tpContrib =
+        pdGainOverBaseline * (
+              totalTpProductivity / 100 // Convert to %
+            + 1.07 // 100% from Base TP production + 7% from CC
+            + tpLvl / 100 // 1% PD per slot, so a lvl 3 TP = 3% PD for having ops slotted
+        )
+        /* After taking into account the final productivity, we remove the basic TP production (100%)
+         * as well as the CC buff (7%) and innate bonuses (3%) from a baseline comparison, which is a
+         * lvl 3 TP, hence why the value is always 1.1 (or 110%).
+         */
+        - 1.1
+    ;
+    totalTpProductivity = roundTo(tpContrib * 100, 2);
 
     // Gold contrib (how much gold FAC PD we get from Tequila)
     if(buffs.max_order_extra_lmd_value > 0){

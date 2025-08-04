@@ -360,6 +360,15 @@ export const riicSkills = {
 
     // ========================== TRADING POST =============================
 
+
+    // Proviso E0
+    "trade_ord_against[000]":{
+        "defaulted_order_extra_bar": 1
+    },
+    // Proviso E2
+    "trade_ord_against[010]":{
+        "defaulted_order_extra_bar": 2
+    },
     // Swire alter E0, Cuora E1, Heidi E0, Deepcolor E0, Adnachiel E0
     "trade_ord_spd[000]":{
         "productivity_flat": 20
