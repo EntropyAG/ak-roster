@@ -25,6 +25,8 @@ import evalTpPairs         from "./riicEvaluators/tradingPost/evalTpPairs.mjs";
 
 import evalRRTeams         from "./riicEvaluators/receptionRoom/evalRRTeams.mjs";
 
+import evalOfficeOps       from "./riicEvaluators/office/evalOfficeOps.mjs";
+
 import { vermeilBubbleTeamCandidates, jayeCandidates } from "data/riic/operators";
 
 const VERMEIL_ID = "char_190_clour";
@@ -75,8 +77,6 @@ export const planify = (roster, base, isMoraleMicro, assumePromotionLevel) => {
 
         // ========== FACTORY ==========
 
-        // ---------- Teams ----------
-
         fac_vermeil: evalCoreOperatorFac(roster, base, VERMEIL_ID, vermeilBubbleTeamCandidates, 1),
         fac_bubble: evalCoreOperatorFac(roster, base, BUBBLE_ID, vermeilBubbleTeamCandidates, 1),
 
@@ -102,6 +102,7 @@ export const planify = (roster, base, isMoraleMicro, assumePromotionLevel) => {
 
         // ========== HUMAN RESOURCES (OFFICE) ==========
 
+        hr_operators: evalOfficeOps(roster, base),
 
         // ========== CONTROL CENTER ==========
 

@@ -1041,7 +1041,7 @@ export const riicSkills = {
     },
     // Lin E2
     "hire_spd_cost&extra[000]":{
-        "hire_speed_per_extra_recruit_slot": 10
+        "hire_speed_per_extra_recruitment_slot": 10
     },
     // Qanipalaat E0
     "hire_spd_cost&clue[001]":{
@@ -1057,6 +1057,11 @@ export const riicSkills = {
     },
     // Tsukinogi E2
     "hire_spd&clue[100]":{
+        "hire_speed": 35,
+        "clue_speed_per_extra_recruitment_slot": 5
+    },
+    // Mr Nothing
+    "hire_spd&clue[101]":{
         "hire_speed": 35,
         "clue_speed_per_extra_recruitment_slot": 5
     },
