@@ -13,7 +13,3 @@ export function roundTo(num: number, digits: number) {
   }
   return Math.round(num * Math.pow(10, digits)) / Math.pow(10, digits);
 };
-
-export function isEven(num: number){
-  return Math.abs(num) % 2 === 0;
-};
