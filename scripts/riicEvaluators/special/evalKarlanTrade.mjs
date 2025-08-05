@@ -1,4 +1,5 @@
-import { composeSquadsOf3, getTradingPostStats } from "../evalHelpers.mjs";
+import { getTradingPostStats } from "../evalHelpers.mjs";
+import { combinations } from "util/fns/mathUtils.ts";
 
 /**
  * Evaluate the player's roster to see whether it's viable to run PI/SR.
@@ -26,7 +27,7 @@ const evalKarlanTrade = (roster, base) => {
         swireAlt, silverAsh, degenbrecher, cliffheart, courier, matterhorn, jaye
     ].filter(e => e !== undefined);
 
-    let squads = composeSquadsOf3(operatorsToTest);
+    let squads = combinations(operatorsToTest, 3);
     let bestPerforming;
     for(let squad of squads){
         let results = getTradingPostStats(squad, base, isGnosisUsed);

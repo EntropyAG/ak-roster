@@ -1,4 +1,5 @@
-import { composeSquadsOf2, getReceptionRoomStats } from "../evalHelpers.mjs";
+import { combinations } from "util/fns/mathUtils";
+import { getReceptionRoomStats } from "../evalHelpers.mjs";
 
 import { rrOperators, rrOperatorsSolo } from "data/riic/operators.ts";
 
@@ -12,7 +13,7 @@ const evalRRTeams = (roster,  base) => {
         e => rrOperators.indexOf(e.op_id) !== -1
     );
     // We build squads of 2, since the core operator is always present
-    let squads = composeSquadsOf2(operatorsToTest);
+    let squads = combinations(operatorsToTest, 2);
     // Then we add the few ops that have bonuses while alone
     for(let soloer of rrOperatorsSolo){
         squads.push([roster[soloer]]);

@@ -1,4 +1,5 @@
-import { composeSquadsOf2, getFactoryStats } from "../evalHelpers.mjs";
+import { getFactoryStats } from "../evalHelpers.mjs";
+import { combinations } from "util/fns/mathUtils.ts";
 
 /**
  * Evaluate the player's roster to see the best partners for a given core operator.
@@ -17,7 +18,7 @@ const evalCoreOperatorFac = (roster, base, coreOperatorId, teamCandidates, minim
         e => teamCandidates.indexOf(e.op_id) !== -1
     );
     // We build squads of 2, since the core operator is always present
-    let squads = composeSquadsOf2(operatorsToTest);
+    let squads = combinations(operatorsToTest, 2);
     let bestPerformingExp;
     let bestPerformingGold;
     for(let squad of squads){

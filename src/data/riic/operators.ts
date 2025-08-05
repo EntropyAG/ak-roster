@@ -1,3 +1,4 @@
+// Not allowed to duplicate our supreme bnny overlord
 export const invalidOperators = [
     "char_1001_amiya2", // Amiya guard
     "char_1037_amiya3"  // Amiya medic
@@ -60,6 +61,56 @@ export const samiOperators = [
     "char_341_sntlla",  // Santalla
     "char_2012_typhon", // Typhoon
     "char_4102_threye", // Valarqvin
+];
+
+export const ursusStudentOperators = [
+    "char_197_poca",   // Rosa
+    "char_196_sunbr",  // Gummy
+    "char_194_leto",   // Leto
+    "char_195_glassb", // Istina
+    "char_115_headbr", // Zima
+];
+
+export const lungmenGuardOperators = [
+    "char_010_chen",   // Ch'en
+    "char_308_swire",  // Swire
+    "char_136_hsguma", // Hoshiguma
+];
+
+export const souboAdventurersOperators = [
+    "char_1029_yato2",   // Yato alter
+    "char_1030_noirc2",  // Noir Corne alter
+    "char_4077_palico",  // Terra Research Commission
+];
+
+export const alterOperators = [
+    "char_1011_lava2",  // Lava alter
+    "char_1012_skadi2", // Skadi alter
+    "char_1013_chen2",  // Ch'en alter
+    "char_1014_nearl2", // Nearl alter
+    "char_1021_kroos2", // Kroos alter
+    "char_1023_ghost2", // Specter alter
+    "char_1024_hbisc2", // Hibiscus alter
+    "char_1027_greyy2", // Greyy alter
+    "char_1026_gvial2", // Gavial alter
+    "char_1028_texas2", // Texas alter
+    "char_1020_reed2",  // Reed alter
+    "char_1029_yato2",  // Yato alter
+    "char_500_noirc",   // Noir Corne alter
+    "char_1031_slent2", // Silence alter
+    "char_1032_excu2",  // Executor alter
+    "char_1016_agoat2", // Eyja alter
+    "char_1033_swire2", // Swire alter
+    "char_1034_jesca2", // Jessica alter
+    "char_1036_fang2",  // Fang alter
+    "char_1035_wisdel", // W alter
+    "char_1019_siege2", // Siege alter
+    "char_1038_whitw2", // Lappland alter
+    "char_1039_thorn2", // Thorns alter
+    "char_1040_blaze2", // Blaze alter
+    "char_1041_angel2", // Exusiai alter
+    "char_1042_phatm2", // Phantom alter
+    "char_1044_hsgma2", // Hoshiguma alter
 ];
 
 /************************************
@@ -365,6 +416,8 @@ export const rrOperators = [
 export const ccOperatorsFacPd = [
     "char_003_kalts",   // Kal'tsit
     "char_4179_monstr", // Mon3tr
+    "char_1044_hsgma2", // Hoshiguma alter
+    "char_1029_yato2",  // Yato alter
 ];
 
 export const ccOperatorsTpPd = [
@@ -372,15 +425,17 @@ export const ccOperatorsTpPd = [
     "char_4132_ascln",  // Ascalon
     "char_4071_peper",  // Paprika
     "char_308_swire",   // Swire
+    "char_1030_noirc2", // Noir Corne alter
 ];
 
 export const ccOperatorsRrSpeed = [
     "char_4134_cetsyr", // Civilight Eterna
-    "char_226_hmau",    // Lee
+    "char_322_lmlee",   // Lee
 ];
 
 // For Mlynar synergy, he gets a special evaluation
 export const ccOperatorsSmileys = [
+    "char_4064_mlynar", // Mlynar
     "char_420_flamtl",  // Flametail
     "char_4179_monstr", // Mon3tr
     "char_4098_vvana",  // Viviana
@@ -419,12 +474,11 @@ export const ccOperatorsHrBuff = [
     "char_479_sleach",  // Saileach
 ];
 
-export const ccOperators = [
+export const ccOperatorsOthers = [
     "char_010_chen",    // Ch'en
     "char_2024_chyue",  // Chong Yue
     "char_2015_dusk",   // Dusk,
     "char_206_gnosis",  // Gnosis
-    "char_4064_mlynar", // Mlynar
     "char_197_poca",    // Rosa
     "char_1035_wisdel", // Wisadel
 ];

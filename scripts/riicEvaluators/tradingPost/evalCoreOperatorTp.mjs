@@ -1,4 +1,5 @@
-import { composeSquadsOf2, getTradingPostStats } from "../evalHelpers.mjs";
+import { getTradingPostStats } from "../evalHelpers.mjs";
+import { combinations } from "util/fns/mathUtils.ts";
 
 /**
  * Evaluate the player's roster to see the best partners for a given core operator.
@@ -30,7 +31,7 @@ const evalCoreOperatorTp = (
         e => teamCandidates.indexOf(e.op_id) !== -1
     );
     // We build squads of 2, since the core operator is always present
-    let squads = composeSquadsOf2(operatorsToTest);
+    let squads = combinations(operatorsToTest, 2);
     let bestPerforming;
     for(let squad of squads){
         squad.push(coreOperator);

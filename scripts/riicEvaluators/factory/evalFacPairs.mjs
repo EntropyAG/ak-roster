@@ -1,4 +1,5 @@
-import { getFactoryStats, composeSquadsOf2 } from "../evalHelpers.mjs";
+import { getFactoryStats } from "../evalHelpers.mjs";
+import { combinations } from "util/fns/mathUtils.ts";
 
 import { facGeneralistOperators, facExpOperators, facGoldOperators } from "data/riic/operators.ts";
 
@@ -12,7 +13,7 @@ const evalFacPairs = (roster,  base) => {
         e => [...facGeneralistOperators, ...facGoldOperators, ...facExpOperators].indexOf(e.op_id) !== -1
     );
     // We build squads of 2, since the core operator is always present
-    let squads = composeSquadsOf2(operatorsToTest);
+    let squads = combinations(operatorsToTest, 2);
     for(let squad of squads){
         let results = getFactoryStats(squad, base);
         opScores.push({
