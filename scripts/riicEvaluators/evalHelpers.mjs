@@ -1,7 +1,7 @@
 import cnBuildingData from "../ArknightsGameData/zh_CN/gamedata/excel/building_data.json";
 import operators from "data/operators.json";
 
-import { roundTo } from "util/fns/mathUtils.ts";
+import { roundTo, weightedTimeAverage } from "util/fns/mathUtils.ts";
 import { riicSkills } from "data/riic/skills.ts";
 import { tpOrders, tpDailyLmd } from "data/riic/tpOrders";
 import {
@@ -78,8 +78,8 @@ export const checkOperatorCount = (...opsUsed) => {
 };
 
 /**
- * Given a list of 3 operators, return the expected stats for a lvl 3 trading post
- * @param  {Array[Operator]} ops: An array containing 2 or 3 operators (functions with less)
+ * Given a list of 3 operators, return the expected stats for a trading post
+ * @param  {Array[Operator]} ops: An array containing 1 to 3 operators
  */
 export const getTradingPostStats = (
     ops,
@@ -427,8 +427,8 @@ export const getFactoryStats = (
     // Generalistic
     let allPD = 0
         + buffs.productivity_flat
-        + buffs.productivity_per_hour_5_stacks  * (5/2 + 7) / 12 // 12h weighted average
-        + buffs.productivity_per_hour_10_stacks * (10/2 + 2) / 12 // 12h weighted average
+        + weightedTimeAverage(buffs.productivity_per_hour_5_stacks, 5, 12)
+        + weightedTimeAverage(buffs.productivity_per_hour_10_stacks, 10, 12)
         // Vermeil
         + buffs.cap_all_flat * buffs.productivity_per_total_cap_vermeil * buffs.is_bubble_absent
         // Bubble
@@ -613,7 +613,7 @@ export const getReceptionRoomStats = (
         // Solo-ers
         + buffs.clue_speed_solo * (ops.length === 1 ? 1 : 0)
         // Ines
-        + buffs.clue_speed_per_hour_5_stacks * (5/2 + 7) / 12 // 12h weighted average
+        + weightedTimeAverage(buffs.clue_speed_per_hour_5_stacks, 5, 12)
     ;
 
     return {
@@ -678,7 +678,7 @@ export const getPowerPlantStats = (
 
     let droneSpeed = buffs.drone_speed
         // Spuria
-        + buffs.drone_speed_per_hour_5_stacks * (5/2 + 7) / 12 // 12h weighted average
+        + weightedTimeAverage(buffs.drone_speed_per_hour_5_stacks, 5, 12)
         // Friston
         + buffs.drone_speed_if_kaltsit_in_cc * isKaltsitInCC
         // Phonor
