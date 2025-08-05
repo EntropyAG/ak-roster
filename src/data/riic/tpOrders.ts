@@ -1,4 +1,10 @@
 export const tpOrders = {
+    tp1weights:{
+        0: [1, 0,  0],  // default
+        1: [1, 0,  0], // 1x slight increase
+        2: [1, 0,  0], // 2x slight increase
+        3: [1, 0,  0]  // 1x increase (or more)
+    },
     // Probability of getting a low/med/high yield in this order, depending on tailoring skill
     // Nota: these are NOT the real values, these simply have not been investigated sufficiently
     // there is no reason to ever use Tailoring on a lvl 2 TP for the time being, hence why
@@ -30,9 +36,9 @@ export const tpOrders = {
     }
 };
 
-// Baseline used to estimate the productivity of a Shamare team
+// Baseline used to estimate the productivity of teams modifying orders (Tequila, Proviso, Tailoring buff)
 export const tpDailyLmd = {
     0: 10000,
-    1: 10110,
-    2: 10265
+    1: 10140.84507,
+    2: 10265.48673
 };

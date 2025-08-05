@@ -1,5 +1,5 @@
-import { composeSquadsOf2, composeSquadsOf3, getPowerPlantStats } from "../evalHelpers.mjs";
-
+import { getPowerPlantStats } from "../evalHelpers.mjs";
+import { combinations } from "util/fns/mathUtils.ts";
 import { ppOperators } from "data/riic/operators.ts";
 
 /**
@@ -12,14 +12,7 @@ const evalPPTeams = (roster,  base) => {
         e => ppOperators.indexOf(e.op_id) !== -1
     );
     // We build squads depends on how many PPs are in base
-    let squads;
-    if(base.getPowerPlantCount() === 1){
-        squads = operatorsToTest;
-    }else if(base.getPowerPlantCount() === 2){
-        squads = composeSquadsOf2(operatorsToTest);
-    }else{
-        squads = composeSquadsOf3(operatorsToTest);
-    }
+    let squads = combinations(operatorsToTest, base.getPowerPlantCount());
 
     // Finally we actually retrieve the score for all teams
     for(let squad of squads){

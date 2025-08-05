@@ -33,3 +33,39 @@ export function weightedTimeAverage(scalingPerHour: number, maxStacks: number, p
   }
   return cumulativeValue / period;
 };
+
+/**
+ * Borrowed from: https://www.linkedin.com/pulse/combinations-typescript-emerson-souza
+ * 
+ * Returns all possible combinations of items within an array with a specified length.
+ * E.g: For an array [1, 2, 3, 4] and size 2, the results would be:
+ * [ [1, 2], [1, 3], [1, 4], [2, 3], [2, 4], [3, 4] ]
+ * @param items: an array of objects to be combined. Can be any type.
+ * @param size: the length of each combo.
+ * @returns an array of all combinations based on initial objects
+ */
+export function combinations<T>(items: T[], size: number = items.length){
+  const combinations: T[][] = [];
+  const stack: number[] = [];
+  let i = 0;
+
+  size = Math.min(items.length, size);
+
+  while (true) {
+    if (stack.length === size) {
+      combinations.push(stack.map((index) => items[index]));
+      i = stack.pop()! + 1;
+    }
+
+    if (i >= items.length) {
+      if (stack.length === 0) {
+        break;
+      }
+      i = stack.pop()! + 1;
+    } else {
+      stack.push(i++);
+    }
+  }
+
+  return combinations;
+};

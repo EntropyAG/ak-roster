@@ -29,6 +29,8 @@ import evalPPTeams         from "./riicEvaluators/powerPlant/evalPPTeams.mjs";
 
 import evalOfficeOps       from "./riicEvaluators/office/evalOfficeOps.mjs";
 
+import evalCCTeams         from "./riicEvaluators/controlCenter/evalCCTeams.mjs";
+
 import { vermeilBubbleTeamCandidates, jayeCandidates } from "data/riic/operators";
 
 const VERMEIL_ID = "char_190_clour";
@@ -64,6 +66,7 @@ export const planify = (roster, base, isMoraleMicro, assumePromotionLevel) => {
 
     let scores = {
         // ========== SPECIAL ==========
+
         spl_piSrSquad: evalPiSr(roster, base, isMoraleMicro),
         spl_wpSquad: evalWordlyPlight(roster, base, isMoraleMicro),
         spl_automation: evalAutomation(roster, base),
@@ -87,7 +90,6 @@ export const planify = (roster, base, isMoraleMicro, assumePromotionLevel) => {
 
         // ========== TRADING POST ==========
 
-        // ---------- Teams ----------
         tp_shamare: evalShamare(roster),
         tp_pozyGLP: evalPozyGLP(roster, base),
         tp_e0Jaye: evalCoreOperatorTp(roster, base, JAYE_ID, jayeCandidates, 0, 0),
@@ -110,9 +112,7 @@ export const planify = (roster, base, isMoraleMicro, assumePromotionLevel) => {
 
         // ========== CONTROL CENTER ==========
 
-        // TODO: Alter morale squad
-        // TODO: Lee agency
-        // TODO: Mlynar smiley squad
+        cc_operators: evalCCTeams(roster, base),
     };
     console.log(scores);
     console.log(upgradedOps);

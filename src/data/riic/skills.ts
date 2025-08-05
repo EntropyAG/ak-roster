@@ -1145,6 +1145,14 @@ export const riicSkills = {
     "control_prod_spd[1000]":{
         "factory_productivity": 2
     },
+    // Noir Corne Alter E2
+    "control_token_tra_spd[000]":{
+        "trading_post_productivity_if_monhun_in_cc": 7
+    },
+    // Yato alter E2
+    "control_token_prod_spd2[000]":{
+        "factory_productivity_if_monhun_in_cc": 2,
+    },
     // Hoshiguma alter E2
     "control_token_prod_spd3[000]":{
         "factory_productivity_if_LGD_in_CC": 3
@@ -1159,11 +1167,13 @@ export const riicSkills = {
     },
     // Civilight Eterna E0
     "control_mp_cost_double[000]":{
-        "amiya_civilight_morale_recovery": 0.05
+        "amiya_civilight_morale_recovery": 0.05,
+        "is_civilight_in_cc": 1
     },
     // Civilight Eterna E2 (replaces)
     "control_mp_cost_double[001]":{
-        "amiya_civilight_morale_recovery": 0.1
+        "amiya_civilight_morale_recovery": 0.1,
+        "is_civilight_in_cc": 1
     },
     // Civilight Eterna E2
     "control_upMeetingSpeed[100]":{
@@ -1191,22 +1201,26 @@ export const riicSkills = {
     "control_mp_cost&faction[030]":{
         "morale_recovery_per_karlan_trade": 0.05
     },
+    // Lava alter E0, Kroos alter E0, Hibiscus alter E0
+    "control_mp_cost&faction[900]":{
+        "morale_recovery_per_alter": 0.05
+    },
     // Wisadel E2
     "control_mp_expand_double[000]":{
         "morale_recovery_others": 0.1,
         "morale_recovery_others_if_civilight_in_cc": 0.1,
     },
     // Lee E0
-    "workshop_proc_probability[010]":{ // Yes, the ID is weird, blame HG
+    "control_allCost_condChar[000]":{
         "morale_recovery_if_aak_present": 0.25
     },
     // Lee E2
-    "control_mp_cost&faction2[000]":{
+    "control_upMeetingSpeed[000]":{
         "clue_speed": 25
     },
     // Chong Yue E0
     "control_mp_cost&bd_up[000]":{
-        "world_plight_per_sui": 5
+        "worldly_plight_per_sui": 5
     },
     // Dusk E0
     "control_mp_cost&bd1[000]":{

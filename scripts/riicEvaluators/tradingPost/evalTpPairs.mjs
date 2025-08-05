@@ -1,4 +1,5 @@
-import { getTradingPostStats, composeSquadsOf2 } from "../evalHelpers.mjs";
+import { getTradingPostStats } from "../evalHelpers.mjs";
+import { combinations } from "util/fns/mathUtils.ts";
 
 import { tpOperators } from "../../../src/data/riic/operators.ts";
 
@@ -12,7 +13,7 @@ const evalTpPairs = (roster,  base) => {
         e => tpOperators.indexOf(e.op_id) !== -1
     );
     // We build squads of 2, since the core operator is always present
-    let squads = composeSquadsOf2(operatorsToTest);
+    let squads = combinations(operatorsToTest, 2);
     for(let squad of squads){
         let results = getTradingPostStats(squad, base);
         opScores.push({

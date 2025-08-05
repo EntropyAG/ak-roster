@@ -9,7 +9,11 @@ import {
     bswOperators,
     karlanTradeOperators,
     lateranoOperators,
-    samiOperators
+    samiOperators,
+    lungmenGuardOperators,
+    alterOperators,
+    ursusStudentOperators,
+    souboAdventurersOperators
 } from "data/riic/operators.ts";
 
 const TP_CAPS = {
@@ -751,55 +755,139 @@ export const getOfficeStats = (
 };
 
 /**
- * For a list of operators given as input, returns an array containing all combos of 3 operators possible
- * @param {Array[Operator]} operators: A list of at least 3 operators
+ * Given input operators, return the expected stats for the Control Center
+ * @param  {Array[Operator]} ops: An array containing 1 to 5 operators
  */
-export const composeSquadsOf3 = (operators) => {
-    if(!operators || operators.length < 3){
-        throw new Error("Squad composition requires at least 3 operators to function");
-    }
-    let compositions = [];
-    let op1 = 0;
-    let op2 = 1;
-    let op3 = 2;
-    while(true){
-        compositions.push([operators[op1], operators[op2], operators[op3]]);
-        if(op1 === operators.length - 3){
-            return compositions;
-        }
-        op3++;
-        if(op3 === operators.length){
-            op2++;
-            op3 = op2 + 1;
-            if(op2 === operators.length - 1){
-                op1++;
-                op2 = op1 + 1;
-                op3 = op2 + 1;
+export const getControlCenterStats = (
+    ops,
+    base
+) => {
+    // As provided by the various operators
+    let buffs = {
+        // Only applicable to CC
+        "morale_recovery": 0,
+        // Yato alter, Noir Corne alter
+        "factory_productivity_if_monhun_in_cc": 0,
+        "trading_post_productivity_if_monhun_in_cc": 0,
+        "soubo_adventurer_present": 0,
+        // Mlynar
+        "smiley_count": 0,
+        "morale_recovery_pp_hr_rr": 0,
+        "recover_morale_for_others_from_smileys": 0,
+        // Reed alter, Kestrel, Nymph
+        "dorm_morale_recovery": 0,
+        // Ascalon, Blaze Alter, Hoshiguma alter
+        "specialization_training_speed": 0,
+        // Ascalon, Amiya, Swire, Paprika
+        "trading_post_productivity": 0,
+        // Kal'tsit, Mon3tr
+        "factory_productivity": 0,
+        // Saileach
+        "hire_speed_if_current_hire_speed_below_30": 0,
+        // Civilight Eterna, Lee
+        "clue_speed": 0,
+        // Hoshiguma alter
+        "factory_productivity_if_LGD_in_CC": 0,
+        // Ch'en
+        "morale_recovery_per_lungmen_department": 0,
+        "lgd_operator_count": 0,
+        // Rosa
+        "morale_recovery_per_ursus_student": 0,
+        "ursus_student_count": 0,
+        // Gnosis
+        "morale_recovery_per_karlan_trade": 0,
+        "karlan_trade_operator_count": 0,
+        // Kroos alter, Hibiscus alter, Lava alter
+        "morale_recovery_per_alter": 0,
+        "alter_operator_count": 0,
+        // Wisadel, Chongyue
+        "morale_recovery_others": 0,
+        // Wisadel
+        "morale_recovery_others_if_civilight_in_cc": 0,
+        "is_civilight_in_cc": 0
+    };
+
+    for(let operator of ops){
+        for(let skill of getActiveOperatorRiicSkills(operator)){
+            if(!riicSkills[skill.buffId]){
+                continue;
+            }
+            for(let effect of Object.keys(riicSkills[skill.buffId])){
+                if(buffs[effect] !== undefined && skill.buffId.indexOf("control") === 0){
+                    buffs[effect] += riicSkills[skill.buffId][effect];
+                }
             }
         }
-    }
-};
+        /**
+         * Innate bonuses
+         * Each operator slotted will grant -0.05 MD to all facilities by default,
+         * even if they don't have CC-related skills
+         */
+        buffs.morale_recovery += 0.05;
+        buffs.morale_recovery_others += 0.05;
 
-/**
- * For a list of operators given as input, returns an array containing all pairs of operators possible
- * @param {Array[Operator]} operators: A list of at least 2 operators
- */
-export const composeSquadsOf2 = (operators) => {
-    if(!operators || operators.length < 2){
-        throw new Error("Squad composition requires at least 2 operators to function");
-    }
-    let compositions = [];
-    let op1 = 0;
-    let op2 = 1;
-    while(true){
-        compositions.push([operators[op1], operators[op2]]);
-        if(op1 === operators.length - 2){
-            return compositions;
+        if(lungmenGuardOperators.includes(operator.op_id)){
+            buffs.lgd_operator_count = 1;
         }
-        op2++;
-        if(op2 === operators.length){
-            op1++;
-            op2 = op1 + 1;
+
+        if(ursusStudentOperators.includes(operator.op_id)){
+            buffs.ursus_student_count = 1;
+        }
+
+        if(karlanTradeOperators.includes(operator.op_id)){
+            buffs.karlan_trade_operator_count = 1;
+        }
+
+        if(alterOperators.includes(operator.op_id)){
+            buffs.alter_operator_count = 1;
+        }
+
+        if(souboAdventurersOperators.includes(operator.op_id)){
+            buffs.soubo_adventurer_present = 1;
         }
     }
+
+    let moraleDrainCC = buffs.morale_recovery
+        // Ch'en
+        + buffs.morale_recovery_per_lungmen_department * buffs.lgd_operator_count
+        // Rosa
+        + buffs.morale_recovery_per_ursus_student * buffs.ursus_student_count
+        // Gnosis
+        + buffs.morale_recovery_per_karlan_trade * buffs.karlan_trade_operator_count
+        // Alter
+        + buffs.morale_recovery_per_alter * buffs.alter_operator_count
+    ;
+
+    let moraleDrainOthers = buffs.morale_recovery_others
+      + buffs.recover_morale_for_others_from_smileys * buffs.smiley_count * 0.05
+      + buffs.morale_recovery_others_if_civilight_in_cc * buffs.is_civilight_in_cc
+    ;
+
+    let moraleRecDorm = buffs.dorm_morale_recovery;
+    let trainingSpeed = buffs.specialization_training_speed;
+    let facPD = Math.max(
+        buffs.factory_productivity,
+        buffs.factory_productivity_if_LGD_in_CC * Math.min(buffs.lgd_operator_count, 1),
+        buffs.factory_productivity_if_monhun_in_cc * buffs.soubo_adventurer_present
+    );
+    let tpPD = Math.max(
+        buffs.trading_post_productivity,
+        buffs.trading_post_productivity_if_monhun_in_cc * buffs.soubo_adventurer_present
+    );
+    let clueSpeed = buffs.clue_speed;
+
+    return {
+        "operator1": ops[0],
+        "operator2": ops[1],
+        "operator3": ops[2],
+        "operator4": ops[3],
+        "operator5": ops[4],
+        "moraleDrainCC": moraleDrainCC,
+        "moraleDrainOthers": roundTo(moraleDrainOthers, 2),
+        "moraleRecDorm": moraleRecDorm,
+        "trainingSpeed": trainingSpeed,
+        "facPD": facPD,
+        "tpPD": tpPD,
+        "clueSpeed": clueSpeed
+    };
 };
