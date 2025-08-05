@@ -96,7 +96,7 @@ export const alterOperators = [
     "char_1028_texas2", // Texas alter
     "char_1020_reed2",  // Reed alter
     "char_1029_yato2",  // Yato alter
-    "char_500_noirc",   // Noir Corne alter
+    "char_1030_noirc2",  // Noir Corne alter
     "char_1031_slent2", // Silence alter
     "char_1032_excu2",  // Executor alter
     "char_1016_agoat2", // Eyja alter

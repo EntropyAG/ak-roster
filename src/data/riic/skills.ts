@@ -1147,11 +1147,11 @@ export const riicSkills = {
     },
     // Noir Corne Alter E2
     "control_token_tra_spd[000]":{
-        "trading_post_productivity_if_monhun_in_cc": 7
+        "trading_post_productivity_if_kirin_in_cc": 7
     },
     // Yato alter E2
     "control_token_prod_spd2[000]":{
-        "factory_productivity_if_monhun_in_cc": 2,
+        "factory_productivity_if_rathalos_in_cc": 2,
     },
     // Hoshiguma alter E2
     "control_token_prod_spd3[000]":{
@@ -1231,6 +1231,10 @@ export const riicSkills = {
     "control_mp_cost&bd2[000]":{
         "morale_recovery": 0.05,
         "perception_information_above_half_morale": 10
+    },
+    // Yato alter E0
+    "control_mp_cost&bd2[010]":{
+        "is_kirin_present": 1
     },
     // Nearl E0, Dobermann E0
     "control_mp_cost[000]":{
@@ -1312,4 +1316,8 @@ export const riicSkills = {
         "morale_recovery_others": 0.05,
         "morale_recovery_others_per_20_wordly_plight": 0.05
     },
+    // Noir Corne alter E0
+    "control_mp_bd2[000]":{
+        "is_rathalos_present": 1
+    }
 };
