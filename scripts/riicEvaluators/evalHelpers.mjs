@@ -12,8 +12,7 @@ import {
     samiOperators,
     lungmenGuardOperators,
     alterOperators,
-    ursusStudentOperators,
-    souboAdventurersOperators
+    ursusStudentOperators
 } from "data/riic/operators.ts";
 
 const TP_CAPS = {

@@ -14,15 +14,15 @@ import {
 
 const CC_SLOT_COUNT = 5;
 
-// Used to give more value to certain buffs compared to others
+// Used to give more value to certain buffs compared to others. Modify the right part
 const CC_BUFFS_WEIGHTS = {
-    "facPD": 13,
-    "tpPD": 12,
-    "clueSpeed": 7,
-    "moraleDrainOthers": 3,
-    "moraleDrainCC": 2,
-    "moraleRecDorm": 1,
-    "trainingSpeed": 0,
+    "facPD":                1/2 * 21,
+    "tpPD":                 1/7 * 17,
+    "moraleDrainOthers":  1/0.1 * 11,
+    "clueSpeed":           1/15 * 9,
+    "moraleDrainCC":     1/0.05 * 5,
+    "moraleRecDorm":     1/0.05 * 3,
+    "trainingSpeed":        1/5 * 1,
 };
 
 /**
