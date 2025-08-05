@@ -767,9 +767,10 @@ export const getControlCenterStats = (
         // Only applicable to CC
         "morale_recovery": 0,
         // Yato alter, Noir Corne alter
-        "factory_productivity_if_monhun_in_cc": 0,
-        "trading_post_productivity_if_monhun_in_cc": 0,
-        "soubo_adventurer_present": 0,
+        "factory_productivity_if_rathalos_in_cc": 0,
+        "trading_post_productivity_if_kirin_in_cc": 0,
+        "is_kirin_present": 0,
+        "is_rathalos_present": 0,
         // Mlynar
         "smiley_count": 0,
         "morale_recovery_pp_hr_rr": 0,
@@ -827,23 +828,19 @@ export const getControlCenterStats = (
         buffs.morale_recovery_others += 0.05;
 
         if(lungmenGuardOperators.includes(operator.op_id)){
-            buffs.lgd_operator_count = 1;
+            buffs.lgd_operator_count += 1;
         }
 
         if(ursusStudentOperators.includes(operator.op_id)){
-            buffs.ursus_student_count = 1;
+            buffs.ursus_student_count += 1;
         }
 
         if(karlanTradeOperators.includes(operator.op_id)){
-            buffs.karlan_trade_operator_count = 1;
+            buffs.karlan_trade_operator_count += 1;
         }
 
         if(alterOperators.includes(operator.op_id)){
-            buffs.alter_operator_count = 1;
-        }
-
-        if(souboAdventurersOperators.includes(operator.op_id)){
-            buffs.soubo_adventurer_present = 1;
+            buffs.alter_operator_count += 1;
         }
     }
 
@@ -868,11 +865,11 @@ export const getControlCenterStats = (
     let facPD = Math.max(
         buffs.factory_productivity,
         buffs.factory_productivity_if_LGD_in_CC * Math.min(buffs.lgd_operator_count, 1),
-        buffs.factory_productivity_if_monhun_in_cc * buffs.soubo_adventurer_present
+        buffs.factory_productivity_if_rathalos_in_cc * buffs.is_rathalos_present
     );
     let tpPD = Math.max(
         buffs.trading_post_productivity,
-        buffs.trading_post_productivity_if_monhun_in_cc * buffs.soubo_adventurer_present
+        buffs.trading_post_productivity_if_kirin_in_cc * buffs.is_kirin_present
     );
     let clueSpeed = buffs.clue_speed;
 

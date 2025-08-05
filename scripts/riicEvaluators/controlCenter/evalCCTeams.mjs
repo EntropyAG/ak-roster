@@ -18,7 +18,7 @@ const CC_SLOT_COUNT = 5;
 const CC_BUFFS_WEIGHTS = {
     "facPD": 13,
     "tpPD": 12,
-    "clueSpeed": 5,
+    "clueSpeed": 7,
     "moraleDrainOthers": 3,
     "moraleDrainCC": 2,
     "moraleRecDorm": 1,
