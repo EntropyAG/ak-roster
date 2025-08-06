@@ -93,6 +93,8 @@ export const getTradingPostStats = (ops, base, flags = DEFAULT_FLAGS, tpLvl = 3)
         "cap_flat": 0,
         // Proviso
         "defaulted_order_extra_bar": 0,
+        // Gnosis + Karlan Trade
+        "karlan_trade_operator_count": 0,
         // Swire alter
         "productivity_per_external_cap": 0,
         // Jaye
@@ -150,8 +152,7 @@ export const getTradingPostStats = (ops, base, flags = DEFAULT_FLAGS, tpLvl = 3)
         }
         // Gnosis effect added
         if(flags.gnosisBuff === 1 && karlanTradeOperators.includes(operator.op_id)){
-            buffs.productivity_flat -= 15;
-            buffs.cap_flat += 6;
+            buffs.karlan_trade_operator_count++;
         }
 
         // Laterano op check for Exu alter
@@ -162,9 +163,19 @@ export const getTradingPostStats = (ops, base, flags = DEFAULT_FLAGS, tpLvl = 3)
 
     let tpDefaultCap = TP_CAPS[tpLvl];
 
+    // Gnosis buff is only relevant with either Jaye or Swire alter present, so we deactivate it if none are present
+    let isJayeOrSwirePresent = 0;
+    for(let operator of ops){
+        if(["char_272_strong","char_1033_swire2"].includes(operator.op_id)){
+            isJayeOrSwirePresent = 1;
+        }
+    }
+
     let totalTpProductivity =
         // Standard productivity
         buffs.productivity_flat
+        // Gnosis buff (only active if Jaye or Swire alter part of team)
+        + isJayeOrSwirePresent * flags.gnosisBuff * buffs.karlan_trade_operator_count * -15
         // Degenbrecher (not debuffed by Jaye)
         + Math.max(
             Math.min(buffs.productivity_per_5_external_cap * Math.floor(buffs.cap_flat / 5), 100),
@@ -202,6 +213,8 @@ export const getTradingPostStats = (ops, base, flags = DEFAULT_FLAGS, tpLvl = 3)
 
     let bonusCap =
         buffs.cap_flat
+        // Gnosis buff (only active if Jaye or Swire alter part of team)
+        + isJayeOrSwirePresent * flags.gnosisBuff * buffs.karlan_trade_operator_count * 6
         // Jaye exclusive, cap reduction based on other ops productivity
         + buffs.cap_per_10_external_productivity * Math.floor(totalTpProductivity / tpDefaultCap)
         // Texas / Lappland
@@ -349,6 +362,7 @@ export const getFactoryStats = (ops, base, flags = DEFAULT_FLAGS) => {
         "A1_operator_count": 0,
         // Almond
         "productivity_gold_per_BSW_operator": 0,
+        "bsw_operator_count": 0,
         // Alanna
         "productivity_gold_per_robot_in_pp": 0,
         "alanna_give_me_a_hand": 0,
@@ -402,9 +416,9 @@ export const getFactoryStats = (ops, base, flags = DEFAULT_FLAGS) => {
         if(a1Operators.includes(operator.op_id)){
             buffs.A1_operator_count += 1;
         }
-        // Blacksteel Worldwide count (Almond)
+        // Jessica alter in CC + BlackSteel Worldwide
         if(bswOperators.includes(operator.op_id)){
-            flags.bswOpInBase += 1;
+            buffs.bsw_operator_count++;
         }
         // Warmy present for Alanna buff
         if(operator.op_id === "char_4081_warmy"){
@@ -423,16 +437,22 @@ export const getFactoryStats = (ops, base, flags = DEFAULT_FLAGS) => {
         + (buffs.cap_all_flat - buffs.sum_of_cap_above_16) * buffs.productivity_per_total_cap_bubble
         // Tragodia and Ms Christine in same FAC
         + buffs.tragodia_present * buffs.christine_feasting * 30
+        // Mizuki / Highmore Standardization
         + buffs.productivity_per_standard_skill * (
             buffs.standardization_skill_count
             + buffs.convert_RT_PS_to_standard * (
                 buffs.rhine_tech_skill_count + buffs.pinus_sylvestris_skill_count
             )
         )
+        // Pinus Sylvestris
         + buffs.pinus_sylvestris_skill_count * flags.hasVivianaBuff * 7
-        + buffs.has_wild_mane * flags.hasJKinPP * 5 // Justice Knight in PP and Wild Mane present
+        // Wild Mane
+        + buffs.has_wild_mane * flags.hasJKinPP * 5
+        // Dorothy
         + buffs.rhine_tech_skill_count * buffs.productivity_per_rhine_tech_skill
+        // Bryophyta
         + buffs.metalwork_skill_count * buffs.productivity_per_metalwork
+        // Fang alter
         + buffs.A1_operator_count * buffs.productivity_per_A1_operator
         + (
               Math.floor(buffs.engineering_robot_per_facility_level_max_64 * Math.min(64, base.getSumOfFacilityLevels()) / 16)
@@ -440,7 +460,10 @@ export const getFactoryStats = (ops, base, flags = DEFAULT_FLAGS) => {
             + Math.floor(buffs.engineering_robot_per_facility_level_max_64 * Math.min(64, base.getSumOfFacilityLevels()) / 8)
             * buffs.productivity_per_8_engineering_robot
         )
-        + buffs.productivity_per_monster_meal * flags.monsterMealCount // Marcille with external Senshi buff
+        // Senshi (meal) + Marcille (productivity)
+        + buffs.productivity_per_monster_meal * flags.monsterMealCount
+        // Jessica alter + BSW
+        + buffs.bsw_operator_count * flags.hasJessicaAlterBuff * 5
         /**
          * Totter - very messy due to vastly different PD, would require taking into account 12h+ rotations
          * for accurate results, so here's a somewhat weighted PD modifier.
@@ -456,8 +479,8 @@ export const getFactoryStats = (ops, base, flags = DEFAULT_FLAGS) => {
         + buffs.productivity_gold_flat
         // Narantuya
         + buffs.productivity_gold_per_dorm_sum * base.getSumOfDormLevels()
-        // Jessicat alter buff (CC)
-        + buffs.productivity_gold_per_BSW_operator * flags.bswOpInBase
+        // Almond
+        + buffs.productivity_gold_per_BSW_operator * Math.min(flags.bswOpInBase, 3)
         // Alanna
         + buffs.productivity_gold_per_robot_in_pp * flags.robotsInPPCount
         + buffs.alanna_give_me_a_hand * buffs.is_warmy_present * 15
