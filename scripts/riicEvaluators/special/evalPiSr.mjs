@@ -5,7 +5,7 @@
  * @returns {Object}: with "rosmonPD" and "ebenPD" and their respective productivity
  * given the other operators
  */
-const evalPiSr = (roster, base, isMoraleMicro) => {
+const evalPiSr = (roster, base) => {
     let totalPI = 0;
     let totalSR = 0;
     let useDusk = false;
@@ -17,18 +17,16 @@ const evalPiSr = (roster, base, isMoraleMicro) => {
     let useIris = false;
 
     // Dusk & Ling require micromanaging their morale for PI generation, so skip if the player doesn't want to
-    if (isMoraleMicro) {
-        let ling = roster["char_2023_ling"];
-        let dusk = roster["char_2015_dusk"];
-        if (ling && ling.elite === 2) {
-            useLing = true;
-            totalPI += 10;
-        }
+    let ling = roster["char_2023_ling"];
+    let dusk = roster["char_2015_dusk"];
+    if (ling && ling.elite === 2) {
+        useLing = true;
+        totalPI += 10;
+    }
 
-        if (dusk) {
-            useDusk = true;
-            totalPI += 10;
-        }
+    if (dusk) {
+        useDusk = true;
+        totalPI += 10;
     }
 
     // Next to see if we can add Whisperain (and possibly Saileach) to generate more PI

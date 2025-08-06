@@ -119,7 +119,7 @@ export class Riic {
 		return 0;
 	}
 
-	// If all buildings cleared. That's the target, don't both with more than that.
+	// If all buildings cleared. That's the target, don't bother with more than that.
 	getDroneCap(){
 		return 225;
 	}

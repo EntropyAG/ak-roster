@@ -8,7 +8,7 @@ import { combinations } from "util/fns/mathUtils.ts";
  * @returns {Object}: with "rosmonPD" and "ebenPD" and their respective productivity
  * given the other operators
  */
-const evalKarlanTrade = (roster, base) => {
+const evalKarlanTrade = (roster, base, flags) => {
     let gnosis = roster["char_206_gnosis"];
     let swireAlt = roster["char_1033_swire2"];
     let silverAsh = roster["char_172_svrash"];
@@ -18,10 +18,7 @@ const evalKarlanTrade = (roster, base) => {
     let matterhorn = roster["char_199_yak"];
     let jaye = roster["char_272_strong"];
 
-    let isGnosisUsed = false;
-    if(gnosis && gnosis.elite === 2){
-        isGnosisUsed = true;
-    }
+    flags.gnosisBuff = (gnosis && gnosis.elite === 2) ? 1 : 0;
 
     let operatorsToTest = [
         swireAlt, silverAsh, degenbrecher, cliffheart, courier, matterhorn, jaye
@@ -30,14 +27,14 @@ const evalKarlanTrade = (roster, base) => {
     let squads = combinations(operatorsToTest, 3);
     let bestPerforming;
     for(let squad of squads){
-        let results = getTradingPostStats(squad, base, isGnosisUsed);
+        let results = getTradingPostStats(squad, base, flags);
         if(!bestPerforming || results.totalProductivity > bestPerforming.totalProductivity){
             bestPerforming = results;
         }
     }
 
     return {
-        "isGnosisUsed": isGnosisUsed,
+        "isGnosisUsed": flags.gnosisBuff,
         "squad": bestPerforming
     };
 };

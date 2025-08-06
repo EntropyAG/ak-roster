@@ -6,7 +6,7 @@ import { rrOperators, rrOperatorsSolo } from "data/riic/operators.ts";
 /**
  * Returns a list of TP operators with all their productivity
  */
-const evalRRTeams = (roster,  base) => {
+const evalRRTeams = (roster,  base, flags) => {
     let opScores = [];
     // Retrieve all the listed operators, remove those who aren't found to save up on calcs
     let operatorsToTest = Object.values(roster).filter(
@@ -20,7 +20,7 @@ const evalRRTeams = (roster,  base) => {
     }
     // Finally we actually retrieve the score for all teams
     for(let squad of squads){
-        opScores.push(getReceptionRoomStats(squad, base));
+        opScores.push(getReceptionRoomStats(squad, base, flags));
     }
     return opScores.sort((a, b) => b.clueSpeed - a.clueSpeed);
 };
