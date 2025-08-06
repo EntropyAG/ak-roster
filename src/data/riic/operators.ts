@@ -77,6 +77,19 @@ export const lungmenGuardOperators = [
     "char_136_hsguma", // Hoshiguma
 ];
 
+// Note: Silence alter does NOT count as Rhine lab for base
+export const rhineLabOperators = [
+    "char_202_demkni",  // Saria
+    "char_249_mlyss",   // Muelsyse
+    "char_4048_doroth", // Dorothy
+    "char_108_silent",  // Silence
+    "char_134_ifrit",   // Ifrit
+    "char_128_plosis",  // Ptilopsis
+    "char_242_otter",   // Mayer
+    "char_248_mgllan",  // Magallan
+    "char_135_halo",    // Astgenne
+];
+
 export const souboAdventurersOperators = [
     "char_1029_yato2",   // Yato alter
     "char_1030_noirc2",  // Noir Corne alter
@@ -111,6 +124,16 @@ export const alterOperators = [
     "char_1041_angel2", // Exusiai alter
     "char_1042_phatm2", // Phantom alter
     "char_1044_hsgma2", // Hoshiguma alter
+];
+
+export const robotOperators = [
+    "char_286_cast3",   // Castle-3
+    "char_4188_confes", // Confess-47
+    "char_4093_frston", // Friston-3
+    "char_4000_jnight", // Justice Knight
+    "char_285_medic2",  // Lancet-2
+    "char_4136_phonor", // Phonor-0
+    "char_376_therex",  // Thrm-X
 ];
 
 /************************************

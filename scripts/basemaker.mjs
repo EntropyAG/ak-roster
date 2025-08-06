@@ -33,7 +33,7 @@ import evalOfficeOps       from "./riicEvaluators/office/evalOfficeOps.mjs";
 
 import evalCCTeams         from "./riicEvaluators/controlCenter/evalCCTeams.mjs";
 
-import { vermeilBubbleTeamCandidates, jayeCandidates } from "data/riic/operators";
+import { vermeilBubbleTeamCandidates, jayeCandidates, bswOperators, robotOperators, rhineLabOperators } from "data/riic/operators";
 
 const VERMEIL_ID = "char_190_clour";
 const BUBBLE_ID = "char_381_bubble";
@@ -51,14 +51,15 @@ const MAX_ELITE_PER_RARITY = {
 };
 
 export const DEFAULT_FLAGS = {
-    // TP
+    // Trading Post
     gnosisBuff: 0,
     inesInBase: 0,
     wInBase: 0,
     ulpianusInBase: 0,
-    // FAC
+    // Factory
     hasVivianaBuff: 0,
     hasFlametailBuff: 0,
+    hasJessicaAlterBuff: 0,
     hasJKinPP: 0,
     bswOpInBase: 0,
     robotsInPPCount: 0,
@@ -68,9 +69,9 @@ export const DEFAULT_FLAGS = {
     isFiamInDorm: 0,
     isClueExchangeOngoing: 1,
     // Power Plant
-    rhineOpsInBase: 3,
-    isKaltsitInCC: 1,
-    isLogosInTR: 1,
+    rhineOpsInBase: 0,
+    isKaltsitInCC: 0,
+    isLogosInTR: 0,
     // Office
     // Control Center
 };
@@ -130,50 +131,53 @@ export const planify = (roster, base, assumePromotionLevel) => {
     for(let rotation of rotations){
 
         let currentRoster = structuredClone(roster);
-        /***************************************************************
-         ********** Evaluating combos and available operators **********
-         ***************************************************************/
+        let phantomFlags = __fillInFlags(currentRoster, base);
+
+        /**
+         * We do an initial evaluation with all the flags activated to know the highest potential for all teams/operators
+         * based on the current roster. Flags shoulds be activated in a separate variable when actually slotting operators.
+         */
         let scores = {
             // ========== SPECIAL ==========
 
-            spl_piSrSquad: evalPiSr(currentRoster, base, rotation.flags),
-            spl_wpSquad: evalWordlyPlight(currentRoster, base, rotation.flags),
-            spl_automation: evalAutomation(currentRoster, base, rotation.flags),
-            spl_pinus: evalPinusSylvestris(currentRoster, base, rotation.flags),
-            spl_glasgow: evalGlasgow(currentRoster, base, rotation.flags),
-            spl_karlan: evalKarlanTrade(currentRoster, base, rotation.flags),
+            spl_piSrSquad: evalPiSr(currentRoster, base, phantomFlags),
+            spl_wpSquad: evalWordlyPlight(currentRoster, base, phantomFlags),
+            spl_automation: evalAutomation(currentRoster, base, phantomFlags),
+            spl_pinus: evalPinusSylvestris(currentRoster, base, phantomFlags),
+            spl_glasgow: evalGlasgow(currentRoster, base, phantomFlags),
+            spl_karlan: evalKarlanTrade(currentRoster, base, phantomFlags),
             spl_monhun: evalMonsterHunter(currentRoster),
             spl_abyHunt: evalAbyssalHunters(currentRoster),
             spl_jessBSW: evalBSW(currentRoster),
-            spl_dunMes: evalDungeonMeshi(currentRoster, base, rotation.flags),
+            spl_dunMes: evalDungeonMeshi(currentRoster, base, phantomFlags),
             spl_babel: evalBabel(currentRoster),
             spl_pudding: evalPudding(currentRoster),
 
             // ========== FACTORY ==========
 
-            fac_vermeil: evalCoreOperatorFac(currentRoster, base, rotation.flags, VERMEIL_ID, vermeilBubbleTeamCandidates, 1),
-            fac_bubble: evalCoreOperatorFac(currentRoster, base, rotation.flags, BUBBLE_ID, vermeilBubbleTeamCandidates, 1),
+            fac_vermeil: evalCoreOperatorFac(currentRoster, base, phantomFlags, VERMEIL_ID, vermeilBubbleTeamCandidates, 1),
+            fac_bubble: evalCoreOperatorFac(currentRoster, base, phantomFlags, BUBBLE_ID, vermeilBubbleTeamCandidates, 1),
 
-            fac_pairs: evalFacPairs(currentRoster, base, rotation.flags),
-            fac_singles: evalFacSingles(currentRoster, base, rotation.flags),
+            fac_pairs: evalFacPairs(currentRoster, base, phantomFlags),
+            fac_singles: evalFacSingles(currentRoster, base, phantomFlags),
 
             // ========== TRADING POST ==========
 
             tp_shamare: evalShamare(currentRoster),
             tp_pozyGLP: evalPozyGLP(currentRoster, base),
-            tp_e0Jaye: evalCoreOperatorTp(currentRoster, base, rotation.flags, JAYE_ID, jayeCandidates, 0, 0),
-            tp_e1Jaye: evalCoreOperatorTp(currentRoster, base, rotation.flags, JAYE_ID, jayeCandidates, 1),
+            tp_e0Jaye: evalCoreOperatorTp(currentRoster, base, phantomFlags, JAYE_ID, jayeCandidates, 0, 0),
+            tp_e1Jaye: evalCoreOperatorTp(currentRoster, base, phantomFlags, JAYE_ID, jayeCandidates, 1),
 
-            tp_singles: evalTpSingles(currentRoster, base, rotation.flags),
-            tp_pairs: evalTpPairs(currentRoster, base, rotation.flags),
+            tp_singles: evalTpSingles(currentRoster, base, phantomFlags),
+            tp_pairs: evalTpPairs(currentRoster, base, phantomFlags),
 
             // ========== RECEPTION ROOM ==========
 
-            rr_squads: evalRRTeams(currentRoster, base, rotation.flags),
+            rr_squads: evalRRTeams(currentRoster, base, phantomFlags),
 
             // ========== POWER PLANT ==========
 
-            pp_squads: evalPPTeams(currentRoster, base, rotation.flags),
+            pp_squads: evalPPTeams(currentRoster, base, phantomFlags),
 
             // ========== HUMAN RESOURCES (OFFICE) ==========
 
@@ -193,4 +197,95 @@ export const planify = (roster, base, assumePromotionLevel) => {
          ********************************************************************/
 
     }
+};
+
+/**
+ * Quickly initializes all the flags based on the player's account.
+ * Note that this is meant for a phantom use of the flags, which is to say only for an initial evaluation.
+ * When actually slotting in the operators, flags should be turned on/off manually, instead of relying on
+ * operators simply being there.
+ * @param {*} roster
+ */
+const __fillInFlags = (roster, base) => {
+    let flags = DEFAULT_FLAGS;
+
+    // Trading Post
+    if(roster["char_206_gnosis"]?.elite === 2){
+        flags.gnosisBuff = 1;
+    }
+
+    if(roster["char_4087_ines"]){
+        flags.inesInBase = 1;
+    }
+
+    if(roster["char_113_cqbw"]){
+        flags.wInBase = 1;
+    }
+
+    if(roster["char_4145_ulpia"]){
+        flags.ulpianusInBase = 1;
+    }
+
+    // Factory
+    if(roster["char_4098_vvana"]?.elite === 2){
+        flags.hasVivianaBuff = 1;
+    }
+
+    if(roster["char_420_flamtl"]?.elite === 2){
+        flags.hasFlametailBuff = 1;
+    }
+
+    if(roster["char_1034_jesca2"]?.elite === 2){
+        flags.hasJessicaAlterBuff = 1;
+    }
+
+    if(roster["char_4000_jnight"]){
+        flags.hasJKinPP = 1;
+    }
+
+    for(let operator of bswOperators){
+        if(roster[operator]){
+            flags.bswOpInBase++;
+        }
+    }
+
+    for(let operator of robotOperators){
+        if(roster[operator] && flags.robotsInPPCount < base.getPowerPlantCount()){
+            flags.robotsInPPCount++;
+        }
+    }
+
+    if(roster["char_196_sunbr"]){
+        flags.isGummyInTP = 1;
+    }
+
+    if(roster["char_4143_sensi"]?.elite === 2){
+        flags.monsterMealCount = base.getHighestDormLevel();
+    }
+
+    // Reception Room
+    if(roster["char_300_phenxi"]){
+        flags.isFiamInDorm = 1;
+    }
+
+    flags.isClueExchangeOngoing =  1;
+
+    // Power Plant
+    for(let operator of rhineLabOperators){
+        if(operator !== "char_249_mlyss" && roster[operator]){
+            flags.rhineOpsInBase++;
+        }
+    }
+
+    if(roster["char_003_kalts"]){
+        flags.isKaltsitInCC = 1;
+    }
+
+    if(roster["char_4133_logos"]){
+        flags.isLogosInTR = 1;
+    }
+
+    console.log("RETURNING PHANTOM FLAGS");
+    console.log(flags);
+    return flags;
 };
