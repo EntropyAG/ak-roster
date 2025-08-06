@@ -163,19 +163,19 @@ export const getTradingPostStats = (ops, base, flags = DEFAULT_FLAGS, tpLvl = 3)
 
     let tpDefaultCap = TP_CAPS[tpLvl];
 
-    // Gnosis buff is only relevant with either Jaye or Swire alter present, so we deactivate it if none are present
-    let isJayeOrSwirePresent = 0;
-    for(let operator of ops){
-        if(["char_272_strong","char_1033_swire2"].includes(operator.op_id)){
-            isJayeOrSwirePresent = 1;
-        }
+    // If we have a Gnosis (de)buff, then we also do the calcs without it. We'll return the best result of the two.
+    let resultsWithoutGnosis;
+    if(flags.gnosisBuff === 1){
+        let tmpFlags = structuredClone(flags);
+        tmpFlags.gnosisBuff = 0;
+        resultsWithoutGnosis = getTradingPostStats(ops, base, tmpFlags, tpLvl);
     }
 
     let totalTpProductivity =
         // Standard productivity
         buffs.productivity_flat
         // Gnosis buff (only active if Jaye or Swire alter part of team)
-        + isJayeOrSwirePresent * flags.gnosisBuff * buffs.karlan_trade_operator_count * -15
+        + flags.gnosisBuff * buffs.karlan_trade_operator_count * -15
         // Degenbrecher (not debuffed by Jaye)
         + Math.max(
             Math.min(buffs.productivity_per_5_external_cap * Math.floor(buffs.cap_flat / 5), 100),
@@ -214,7 +214,7 @@ export const getTradingPostStats = (ops, base, flags = DEFAULT_FLAGS, tpLvl = 3)
     let bonusCap =
         buffs.cap_flat
         // Gnosis buff (only active if Jaye or Swire alter part of team)
-        + isJayeOrSwirePresent * flags.gnosisBuff * buffs.karlan_trade_operator_count * 6
+        + flags.gnosisBuff * buffs.karlan_trade_operator_count * 6
         // Jaye exclusive, cap reduction based on other ops productivity
         + buffs.cap_per_10_external_productivity * Math.floor(totalTpProductivity / tpDefaultCap)
         // Texas / Lappland
@@ -299,6 +299,11 @@ export const getTradingPostStats = (ops, base, flags = DEFAULT_FLAGS, tpLvl = 3)
         eqFacProductivity = roundTo(goldContribution * 100, 2);
     }
 
+    // Now we replace the evaluation by the non-Gnosis one if we have a possible replacement AND if it's better.
+    if(resultsWithoutGnosis?.totalProductivity >= (totalTpProductivity + eqFacProductivity)){
+        return resultsWithoutGnosis;
+    }
+
     return {
         "operator1": ops[0],
         "operator2": ops[1],
@@ -307,7 +312,8 @@ export const getTradingPostStats = (ops, base, flags = DEFAULT_FLAGS, tpLvl = 3)
         "totalCap": bonusCap + tpDefaultCap,
         "totalProductivity": totalTpProductivity + eqFacProductivity,
         "tpProductivity": totalTpProductivity,
-        "facProductivity": eqFacProductivity
+        "facProductivity": eqFacProductivity,
+        "usesGnosis": flags.gnosisBuff
     };
 };
 

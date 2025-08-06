@@ -16,14 +16,12 @@ import evalWordlyPlight    from "./riicEvaluators/special/evalWordlyPlight.mjs";
 import evalBSW             from "./riicEvaluators/special/evalBSW.mjs";
 
 import evalCoreOperatorFac from "./riicEvaluators/factory/evalCoreOperatorFac.mjs";
-import evalFacSingles      from "./riicEvaluators/factory/evalFacSingles.mjs";
-import evalFacPairs        from "./riicEvaluators/factory/evalFacPairs.mjs";
+import evalFacOperators    from "./riicEvaluators/factory/evalFacOperators.mjs";
 
 import evalCoreOperatorTp  from "./riicEvaluators/tradingPost/evalCoreOperatorTp.mjs";
 import evalPozyGLP         from "./riicEvaluators/tradingPost/evalPozyGLP.mjs";
 import evalShamare         from "./riicEvaluators/tradingPost/evalShamare.mjs";
-import evalTpSingles       from "./riicEvaluators/tradingPost/evalTpSingles.mjs";
-import evalTpPairs         from "./riicEvaluators/tradingPost/evalTpPairs.mjs";
+import evalTpOperators     from "./riicEvaluators/tradingPost/evalTpOperators.mjs";
 
 import evalRRTeams         from "./riicEvaluators/receptionRoom/evalRRTeams.mjs";
 
@@ -158,18 +156,18 @@ export const planify = (roster, base, assumePromotionLevel) => {
             fac_vermeil: evalCoreOperatorFac(currentRoster, base, phantomFlags, VERMEIL_ID, vermeilBubbleTeamCandidates, 1),
             fac_bubble: evalCoreOperatorFac(currentRoster, base, phantomFlags, BUBBLE_ID, vermeilBubbleTeamCandidates, 1),
 
-            fac_pairs: evalFacPairs(currentRoster, base, phantomFlags),
-            fac_singles: evalFacSingles(currentRoster, base, phantomFlags),
+            fac_singles: evalFacOperators(currentRoster, base, phantomFlags, 1),
+            fac_pairs: evalFacOperators(currentRoster, base, phantomFlags, 2),
+            fac_triplets: evalFacOperators(currentRoster, base, phantomFlags, 3),
 
             // ========== TRADING POST ==========
 
             tp_shamare: evalShamare(currentRoster),
             tp_pozyGLP: evalPozyGLP(currentRoster, base),
-            tp_e0Jaye: evalCoreOperatorTp(currentRoster, base, phantomFlags, JAYE_ID, jayeCandidates, 0, 0),
-            tp_e1Jaye: evalCoreOperatorTp(currentRoster, base, phantomFlags, JAYE_ID, jayeCandidates, 1),
 
-            tp_singles: evalTpSingles(currentRoster, base, phantomFlags),
-            tp_pairs: evalTpPairs(currentRoster, base, phantomFlags),
+            tp_singles: evalTpOperators(currentRoster, base, phantomFlags, 1),
+            tp_pairs: evalTpOperators(currentRoster, base, phantomFlags, 2),
+            tp_triplets: evalTpOperators(currentRoster, base, phantomFlags, 3),
 
             // ========== RECEPTION ROOM ==========
 
@@ -207,7 +205,7 @@ export const planify = (roster, base, assumePromotionLevel) => {
  * @param {*} roster
  */
 const __fillInFlags = (roster, base) => {
-    let flags = DEFAULT_FLAGS;
+    let flags = structuredClone(DEFAULT_FLAGS);
 
     // Trading Post
     if(roster["char_206_gnosis"]?.elite === 2){
