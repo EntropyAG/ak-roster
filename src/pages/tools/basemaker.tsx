@@ -30,7 +30,7 @@ const Basemaker: NextPage = () => {
       ],
       [2,1,1,1], 3, 3, 3, 3
     );
-    planify(_roster, base, true, promotionLevel);
+    planify(_roster, base, promotionLevel);
   }
 
   const handlePromotionChange = (e: SelectChangeEvent<string>) => {

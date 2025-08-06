@@ -412,7 +412,7 @@ export const rrOperators = [
 /****************************************
  * ---------- CONTROL CENTER ---------- *
  ****************************************/
-// Missing Yato alter, Hoshi alter and Pudding, but they get their own eval
+// Missing Pudding, but she gets her own eval
 export const ccOperatorsFacPd = [
     "char_003_kalts",   // Kal'tsit
     "char_4179_monstr", // Mon3tr
@@ -433,7 +433,6 @@ export const ccOperatorsRrSpeed = [
     "char_322_lmlee",   // Lee
 ];
 
-// For Mlynar synergy, he gets a special evaluation
 export const ccOperatorsSmileys = [
     "char_4064_mlynar", // Mlynar
     "char_420_flamtl",  // Flametail

@@ -5,7 +5,7 @@ import { ppOperators } from "data/riic/operators.ts";
 /**
  * Returns a list of TP operators with all their productivity
  */
-const evalPPTeams = (roster,  base) => {
+const evalPPTeams = (roster,  base, flags) => {
     let opScores = [];
     // Retrieve all the listed operators, remove those who aren't found to save up on calcs
     let operatorsToTest = Object.values(roster).filter(
@@ -16,7 +16,7 @@ const evalPPTeams = (roster,  base) => {
 
     // Finally we actually retrieve the score for all teams
     for(let squad of squads){
-        opScores.push(getPowerPlantStats(squad, base));
+        opScores.push(getPowerPlantStats(squad, base, flags));
     }
     return opScores.sort((a, b) => b.droneSpeed - a.droneSpeed);
 };

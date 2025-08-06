@@ -5,14 +5,14 @@ import { facGeneralistOperators, facExpOperators, facGoldOperators } from "data/
 /**
  * Returns a list of FAC operators with all their productivity (general, EXP and gold)
  */
-const evalFacSingles = (roster,  base) => {
+const evalFacSingles = (roster,  base, flags) => {
     let opScores = [];
     for(let opId of [...facGeneralistOperators, ...facGoldOperators, ...facExpOperators]){
         let operator = roster[opId];
         if(!operator){
             continue;
         }
-        let results = getFactoryStats([operator], base);
+        let results = getFactoryStats([operator], base, flags);
         opScores.push({
             "operator": operator.op_id,
             "pdExp": results.totalExpProductivity,

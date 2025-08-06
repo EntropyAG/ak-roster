@@ -8,6 +8,7 @@ import { combinations } from "util/fns/mathUtils.ts";
 const evalCoreOperatorTp = (
     roster,
     base,
+    flags,
     coreOperatorId,
     teamCandidates,
     minimumPromotion = 0,
@@ -35,7 +36,7 @@ const evalCoreOperatorTp = (
     let bestPerforming;
     for(let squad of squads){
         squad.push(coreOperator);
-        let results = getTradingPostStats(squad, base);
+        let results = getTradingPostStats(squad, base, flags);
         if(!bestPerforming || results.totalProductivity > bestPerforming.totalProductivity){
             bestPerforming = results;
         }

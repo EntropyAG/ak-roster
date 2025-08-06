@@ -5,7 +5,7 @@
  * @returns {Object}: with "rosmonPD" and "ebenPD" and their respective productivity
  * given the other operators
  */
-const evalWordlyPlight = (roster, base, isMoraleMicro) => {
+const evalWordlyPlight = (roster, base) => {
     let totalWP = 0;
     let useDusk = false;
     let useLing = false;
@@ -20,18 +20,16 @@ const evalWordlyPlight = (roster, base, isMoraleMicro) => {
     let suiCount = 0;
 
     // Dusk & Ling require micromanaging their morale for PI generation, so skip if the player doesn't want to
-    if (isMoraleMicro) {
-        let ling = roster["char_2023_ling"];
-        let dusk = roster["char_2015_dusk"];
-        if (ling && ling.elite === 2) {
-            useLing = true;
-            totalWP += 15;
-        }
+    let ling = roster["char_2023_ling"];
+    let dusk = roster["char_2015_dusk"];
+    if (ling && ling.elite === 2) {
+        useLing = true;
+        totalWP += 15;
+    }
 
-        if (dusk) {
-            useDusk = true;
-            totalWP += 15;
-        }
+    if (dusk) {
+        useDusk = true;
+        totalWP += 15;
     }
 
     // Next to see if we can add Mulberry (and possibly Saileach) to generate more PI

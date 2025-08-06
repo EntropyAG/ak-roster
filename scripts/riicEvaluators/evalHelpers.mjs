@@ -15,6 +15,8 @@ import {
     ursusStudentOperators
 } from "data/riic/operators.ts";
 
+import { DEFAULT_FLAGS } from "../basemaker.mjs";
+
 const TP_CAPS = {
     1: 6,
     2: 8,
@@ -84,15 +86,7 @@ export const checkOperatorCount = (...opsUsed) => {
  * Given a list of 3 operators, return the expected stats for a trading post
  * @param  {Array[Operator]} ops: An array containing 1 to 3 operators
  */
-export const getTradingPostStats = (
-    ops,
-    base,
-    gnosisBuff = false,
-    tpLvl = 3,
-    inesInBase = 0,
-    wInBase = 0,
-    ulpianusInBase = 0
-) => {
+export const getTradingPostStats = (ops, base, flags = DEFAULT_FLAGS, tpLvl = 3) => {
     // As provided by the various operators, does not include the TP one
     let buffs = {
         "productivity_flat": 0,
@@ -155,7 +149,7 @@ export const getTradingPostStats = (
             }
         }
         // Gnosis effect added
-        if(gnosisBuff && karlanTradeOperators.includes(operator.op_id)){
+        if(flags.gnosisBuff === 1 && karlanTradeOperators.includes(operator.op_id)){
             buffs.productivity_flat -= 15;
             buffs.cap_flat += 6;
         }
@@ -193,10 +187,10 @@ export const getTradingPostStats = (
         // Quartz
         + buffs.productivity_per_recipe * base.getDifferentRecipesCount()
         // Hoederer
-        + buffs.productivity_if_ines_working * inesInBase
-        + buffs.productivity_if_ines_or_w_working * Math.max(inesInBase, wInBase)
+        + buffs.productivity_if_ines_working * flags.inesInBase
+        + buffs.productivity_if_ines_or_w_working * Math.max(flags.inesInBase, flags.wInBase)
         // Underflow
-        + buffs.productivity_if_ulpianus_in_base * ulpianusInBase
+        + buffs.productivity_if_ulpianus_in_base * flags.ulpianusInBase
     ;
 
     // Snowsant - added later since she copies the previous productivity up to a cap
@@ -311,17 +305,7 @@ export const getTradingPostStats = (
  * @param  {Array[Object]} base: An array listing details about the base (number of dorms,
  * FAC & TP distribution...)
  */
-export const getFactoryStats = (
-    ops,
-    base,
-    hasVivianaBuff = 0,
-    hasFlametailBuff = 0,
-    hasJKinPP = 0,
-    bswOpInBase = 0,
-    robotsInPPCount = 0,
-    isGummyInTP = 0,
-    monsterMealCount = 0
-) => {
+export const getFactoryStats = (ops, base, flags = DEFAULT_FLAGS) => {
     // As provided by the various operators
     let buffs = {
         // ======= General =======
@@ -420,7 +404,7 @@ export const getFactoryStats = (
         }
         // Blacksteel Worldwide count (Almond)
         if(bswOperators.includes(operator.op_id)){
-            bswOpInBase += 1;
+            flags.bswOpInBase += 1;
         }
         // Warmy present for Alanna buff
         if(operator.op_id === "char_4081_warmy"){
@@ -445,8 +429,8 @@ export const getFactoryStats = (
                 buffs.rhine_tech_skill_count + buffs.pinus_sylvestris_skill_count
             )
         )
-        + buffs.pinus_sylvestris_skill_count * hasVivianaBuff * 7
-        + buffs.has_wild_mane * hasJKinPP * 5 // Justice Knight in PP and Wild Mane present
+        + buffs.pinus_sylvestris_skill_count * flags.hasVivianaBuff * 7
+        + buffs.has_wild_mane * flags.hasJKinPP * 5 // Justice Knight in PP and Wild Mane present
         + buffs.rhine_tech_skill_count * buffs.productivity_per_rhine_tech_skill
         + buffs.metalwork_skill_count * buffs.productivity_per_metalwork
         + buffs.A1_operator_count * buffs.productivity_per_A1_operator
@@ -456,7 +440,7 @@ export const getFactoryStats = (
             + Math.floor(buffs.engineering_robot_per_facility_level_max_64 * Math.min(64, base.getSumOfFacilityLevels()) / 8)
             * buffs.productivity_per_8_engineering_robot
         )
-        + buffs.productivity_per_monster_meal * monsterMealCount // Marcille with external Senshi buff
+        + buffs.productivity_per_monster_meal * flags.monsterMealCount // Marcille with external Senshi buff
         /**
          * Totter - very messy due to vastly different PD, would require taking into account 12h+ rotations
          * for accurate results, so here's a somewhat weighted PD modifier.
@@ -473,21 +457,21 @@ export const getFactoryStats = (
         // Narantuya
         + buffs.productivity_gold_per_dorm_sum * base.getSumOfDormLevels()
         // Jessicat alter buff (CC)
-        + buffs.productivity_gold_per_BSW_operator * bswOpInBase
+        + buffs.productivity_gold_per_BSW_operator * flags.bswOpInBase
         // Alanna
-        + buffs.productivity_gold_per_robot_in_pp * robotsInPPCount
+        + buffs.productivity_gold_per_robot_in_pp * flags.robotsInPPCount
         + buffs.alanna_give_me_a_hand * buffs.is_warmy_present * 15
         // Flametail (CC)
-        + buffs.pinus_sylvestris_skill_count * hasFlametailBuff * -10
+        + buffs.pinus_sylvestris_skill_count * flags.hasFlametailBuff * -10
     ;
 
     // EXP only
     let expPD = 0
         + buffs.productivity_exp_flat
         // Leto
-        + buffs.leto_through_thick_and_thin * isGummyInTP * 35
+        + buffs.leto_through_thick_and_thin * flags.isGummyInTP * 35
         // Flametail (CC)
-        + buffs.pinus_sylvestris_skill_count * hasFlametailBuff * 10
+        + buffs.pinus_sylvestris_skill_count * flags.hasFlametailBuff * 10
         // Vermeil
         + buffs.cap_exp_flat * buffs.productivity_per_total_cap_vermeil * buffs.is_bubble_absent
         // Bubble
@@ -529,12 +513,7 @@ export const getFactoryStats = (
  * Given a list of up to 2 operators, return the expected stats for the reception room
  * @param  {Array[Operator]} ops: An array containing 1 or 2 operators
  */
-export const getReceptionRoomStats = (
-    ops,
-    base,
-    isFiamInDorm = 0,
-    isClueExchangeOngoing = 1
-) => {
+export const getReceptionRoomStats = (ops, base, flags = DEFAULT_FLAGS) => {
     // As provided by the various operators
     let buffs = {
         "clue_speed": 0,
@@ -608,9 +587,9 @@ export const getReceptionRoomStats = (
         // Surfer
         + buffs.clue_speed_if_bsw_present * buffs.is_bsw_present
         // Caper
-        + buffs.clue_speed_if_exchange_ongoing * isClueExchangeOngoing
+        + buffs.clue_speed_if_exchange_ongoing * flags.isClueExchangeOngoing
         // Sankta Miksaparato
-        + buffs.clue_speed_if_fiammetta_in_dorm * isFiamInDorm
+        + buffs.clue_speed_if_fiammetta_in_dorm * flags.isFiamInDorm
         // Windscoot
         + buffs.clue_speed_per_recruitment_slot * base.getRecruitmentSlotsCount()
         // Solo-ers
@@ -630,14 +609,7 @@ export const getReceptionRoomStats = (
  * Given an array of 1 to 3 operators, return the expected stats with all the power plants filled
  * @param  {Array[Operator]} ops: An array containing 1 to 3 operators
  */
-export const getPowerPlantStats = (
-    ops,
-    base,
-    rhineOpsInBase = 3,
-    isKaltsitInCC = 1,
-    isLogosInTR = 1,
-
-) => {
+export const getPowerPlantStats = (ops, base, flags = DEFAULT_FLAGS) => {
     // As provided by the various operators
     let buffs = {
         "drone_speed": 0,
@@ -683,15 +655,15 @@ export const getPowerPlantStats = (
         // Spuria
         + weightedTimeAverage(buffs.drone_speed_per_hour_5_stacks, 5, 12)
         // Friston
-        + buffs.drone_speed_if_kaltsit_in_cc * isKaltsitInCC
+        + buffs.drone_speed_if_kaltsit_in_cc * flags.isKaltsitInCC
         // Phonor
-        + buffs.drone_speed_if_logos_in_tr * isLogosInTR
+        + buffs.drone_speed_if_logos_in_tr * flags.isLogosInTR
         // Confess-47
         + buffs.drone_speed_if_laterano_in_other_pp * buffs.has_laterano_in_pp
         // Philae
         + buffs.drone_speed_per_total_dorm_level * base.getSumOfDormLevels()
         // Muelsyse
-        + buffs.drone_speed_per_rhine_5_stacks * Math.min(rhineOpsInBase, 5)
+        + buffs.drone_speed_per_rhine_5_stacks * Math.min(flags.rhineOpsInBase, 5)
         // Greyy alter
         + buffs.drone_speed_per_10_drone_cap * base.getDroneCap() / 10
     ;
@@ -710,10 +682,7 @@ export const getPowerPlantStats = (
  * Given an operator, return the expected hiring speed for the Human Resources/Office
  * @param  {Operator} operator:
  */
-export const getOfficeStats = (
-    operator,
-    base
-) => {
+export const getOfficeStats = (operator, base) => {
     // As provided by the various operators
     let buffs = {
         "hire_speed": 0,
@@ -757,10 +726,7 @@ export const getOfficeStats = (
  * Given input operators, return the expected stats for the Control Center
  * @param  {Array[Operator]} ops: An array containing 1 to 5 operators
  */
-export const getControlCenterStats = (
-    ops,
-    base
-) => {
+export const getControlCenterStats = (ops) => {
     // As provided by the various operators
     let buffs = {
         // Only applicable to CC

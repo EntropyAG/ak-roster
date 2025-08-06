@@ -6,7 +6,7 @@ import { facGeneralistOperators, facExpOperators, facGoldOperators } from "data/
 /**
  * Returns a list of TP operators with all their productivity
  */
-const evalFacPairs = (roster,  base) => {
+const evalFacPairs = (roster,  base, flags) => {
     let opScores = [];
     // Retrieve all the listed operators, remove those who aren't found to save up on calcs
     let operatorsToTest = Object.values(roster).filter(
@@ -15,7 +15,7 @@ const evalFacPairs = (roster,  base) => {
     // We build squads of 2, since the core operator is always present
     let squads = combinations(operatorsToTest, 2);
     for(let squad of squads){
-        let results = getFactoryStats(squad, base);
+        let results = getFactoryStats(squad, base, flags);
         opScores.push({
             "operator1": results.operator1,
             "operator2": results.operator2,

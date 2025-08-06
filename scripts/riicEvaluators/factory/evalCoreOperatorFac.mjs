@@ -5,7 +5,7 @@ import { combinations } from "util/fns/mathUtils.ts";
  * Evaluate the player's roster to see the best partners for a given core operator.
  * Used in particular for both Vermeil and Bubble
  */
-const evalCoreOperatorFac = (roster, base, coreOperatorId, teamCandidates, minimumPromotion) => {
+const evalCoreOperatorFac = (roster, base, flags, coreOperatorId, teamCandidates, minimumPromotion) => {
     let coreOperator = roster[coreOperatorId];
     if(!coreOperator || (coreOperator && coreOperator.elite < minimumPromotion)){
         return {
@@ -23,7 +23,7 @@ const evalCoreOperatorFac = (roster, base, coreOperatorId, teamCandidates, minim
     let bestPerformingGold;
     for(let squad of squads){
         squad.push(coreOperator);
-        let results = getFactoryStats(squad, base);
+        let results = getFactoryStats(squad, base, flags);
         // Replacing EXP squad if current is better
         if(!bestPerformingExp || results.totalExpProductivity > bestPerformingExp.totalExpProductivity){
             bestPerformingExp = results;

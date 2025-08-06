@@ -1,4 +1,6 @@
 import { Operator } from "types/operators/operator";
+import { Riic } from "types/riic";
+import operators from "data/operators.json";
 
 import evalAbyssalHunters  from "./riicEvaluators/special/evalAbyssalHunters.mjs";
 import evalAutomation      from "./riicEvaluators/special/evalAutomation.mjs";
@@ -37,22 +39,56 @@ const VERMEIL_ID = "char_190_clour";
 const BUBBLE_ID = "char_381_bubble";
 const JAYE_ID = "char_272_strong";
 
+const MAX_ROTATION = 3;
+
+const MAX_ELITE_PER_RARITY = {
+    1: 0,
+    2: 0,
+    3: 1,
+    4: 2,
+    5: 2,
+    6: 2
+};
+
+export const DEFAULT_FLAGS = {
+    // TP
+    gnosisBuff: 0,
+    inesInBase: 0,
+    wInBase: 0,
+    ulpianusInBase: 0,
+    // FAC
+    hasVivianaBuff: 0,
+    hasFlametailBuff: 0,
+    hasJKinPP: 0,
+    bswOpInBase: 0,
+    robotsInPPCount: 0,
+    isGummyInTP: 0,
+    monsterMealCount: 0,
+    // Reception Room
+    isFiamInDorm: 0,
+    isClueExchangeOngoing: 1,
+    // Power Plant
+    rhineOpsInBase: 3,
+    isKaltsitInCC: 1,
+    isLogosInTR: 1,
+    // Office
+    // Control Center
+};
+
 /**
   * Using a list of input operators and a base setup, sends back a 3-tiered rotation
   *
   * @param {Array[Operator]} operators: list of operators owned by the player, as imported
-  * @param {Object} setup: object with 4 properties indicating the number and levels of FAC/TPs
-  * @param {Boolean} isMoraleMicro: true if the player is willing to micromanage the morale of specific
-  * operators, such as Dusk / Ling in a PI combo or some workshop operators requiring those in dorm to have
-  * a morale below a certain threshold
+  * @param {Riic} base: Describes the base, including each facility level, type and product (if applicable)
   * @param {Integer} assumePromotionLevel: The promotion (elite) level operators will be forced to have
   * to ensure they have access to relevant skills.
   */
-export const planify = (roster, base, isMoraleMicro, assumePromotionLevel) => {
+export const planify = (roster, base, assumePromotionLevel) => {
     let upgradedOps = [];
     if(assumePromotionLevel > 0){
         for(let operator of Object.values(roster)){
-            if(operator.elite < assumePromotionLevel){
+            let maxElite = MAX_ELITE_PER_RARITY[operators[operator.op_id].rarity];
+            if(operator.elite < assumePromotionLevel && assumePromotionLevel <= maxElite){
                 operator.elite = parseInt(assumePromotionLevel);
                 // We keep track of operators that have been upgraded for later
                 upgradedOps.push(operator);
@@ -60,64 +96,101 @@ export const planify = (roster, base, isMoraleMicro, assumePromotionLevel) => {
         }
     }
 
-    /***************************************************************
-     ********** Evaluating combos and available operators **********
-     ***************************************************************/
+    let rotations = [];
+    // Create the representation of each rotation
+    for(let currRotation=0; currRotation<MAX_ROTATION; currRotation++){
+        rotations.push({
+            // Facilities (excluding dorms and production-oriented)
+            controlCenter: { slots: 5, operators: [], level: 5 },
+            receptionRoom: { slots: 2, operators: [], level: base.receptionRoom },
+            office:        { slots: 1, operators: [], level: base.office },
+            workshop:      { slots: 1, operators: [], level: base.workshop },
+            trainingRoom:  { slots: 1, operators: [], level: base.trainingRoom },
+            // Global flags - used to share modifiers between different facilities
+            flags: DEFAULT_FLAGS
+        });
 
-    let scores = {
-        // ========== SPECIAL ==========
+        // Adding dorms
+        for(let currDorm=0; currDorm<base.dorms.length; currDorm++){
+            rotations[currRotation]["dorm"+currDorm] = { slots: 5, operators: [], level: base.dorms[currDorm] };
+        }
 
-        spl_piSrSquad: evalPiSr(roster, base, isMoraleMicro),
-        spl_wpSquad: evalWordlyPlight(roster, base, isMoraleMicro),
-        spl_automation: evalAutomation(roster, base),
-        spl_pinus: evalPinusSylvestris(roster, base),
-        spl_glasgow: evalGlasgow(roster, base),
-        spl_karlan: evalKarlanTrade(roster, base),
-        spl_monhun: evalMonsterHunter(roster),
-        spl_abyHunt: evalAbyssalHunters(roster),
-        spl_jessBSW: evalBSW(roster),
-        spl_dunMes: evalDungeonMeshi(roster, base),
-        spl_babel: evalBabel(roster),
-        spl_pudding: evalPudding(roster),
+        // Adding production facilities (power plant, factory, trading post)
+        for(let currFacility=0; currFacility<base.production.length; currFacility++){
+            rotations[currRotation]["prod"+currFacility] = {
+                slots: base.production[currFacility].type === "PP" ? 1 : base.production[currFacility].level,
+                operators: [],
+                level:   base.production[currFacility].level,
+                type:    base.production[currFacility].type,
+                product: base.production[currFacility].product
+            };
+        }
+    }
 
-        // ========== FACTORY ==========
+    for(let rotation of rotations){
 
-        fac_vermeil: evalCoreOperatorFac(roster, base, VERMEIL_ID, vermeilBubbleTeamCandidates, 1),
-        fac_bubble: evalCoreOperatorFac(roster, base, BUBBLE_ID, vermeilBubbleTeamCandidates, 1),
+        let currentRoster = structuredClone(roster);
+        /***************************************************************
+         ********** Evaluating combos and available operators **********
+         ***************************************************************/
+        let scores = {
+            // ========== SPECIAL ==========
 
-        fac_pairs: evalFacPairs(roster, base),
-        fac_singles: evalFacSingles(roster, base),
+            spl_piSrSquad: evalPiSr(currentRoster, base, rotation.flags),
+            spl_wpSquad: evalWordlyPlight(currentRoster, base, rotation.flags),
+            spl_automation: evalAutomation(currentRoster, base, rotation.flags),
+            spl_pinus: evalPinusSylvestris(currentRoster, base, rotation.flags),
+            spl_glasgow: evalGlasgow(currentRoster, base, rotation.flags),
+            spl_karlan: evalKarlanTrade(currentRoster, base, rotation.flags),
+            spl_monhun: evalMonsterHunter(currentRoster),
+            spl_abyHunt: evalAbyssalHunters(currentRoster),
+            spl_jessBSW: evalBSW(currentRoster),
+            spl_dunMes: evalDungeonMeshi(currentRoster, base, rotation.flags),
+            spl_babel: evalBabel(currentRoster),
+            spl_pudding: evalPudding(currentRoster),
 
-        // ========== TRADING POST ==========
+            // ========== FACTORY ==========
 
-        tp_shamare: evalShamare(roster),
-        tp_pozyGLP: evalPozyGLP(roster, base),
-        tp_e0Jaye: evalCoreOperatorTp(roster, base, JAYE_ID, jayeCandidates, 0, 0),
-        tp_e1Jaye: evalCoreOperatorTp(roster, base, JAYE_ID, jayeCandidates, 1),
+            fac_vermeil: evalCoreOperatorFac(currentRoster, base, rotation.flags, VERMEIL_ID, vermeilBubbleTeamCandidates, 1),
+            fac_bubble: evalCoreOperatorFac(currentRoster, base, rotation.flags, BUBBLE_ID, vermeilBubbleTeamCandidates, 1),
 
-        tp_singles: evalTpSingles(roster, base),
-        tp_pairs: evalTpPairs(roster, base),
+            fac_pairs: evalFacPairs(currentRoster, base, rotation.flags),
+            fac_singles: evalFacSingles(currentRoster, base, rotation.flags),
 
-        // ========== RECEPTION ROOM ==========
+            // ========== TRADING POST ==========
 
-        rr_squads: evalRRTeams(roster, base),
+            tp_shamare: evalShamare(currentRoster),
+            tp_pozyGLP: evalPozyGLP(currentRoster, base),
+            tp_e0Jaye: evalCoreOperatorTp(currentRoster, base, rotation.flags, JAYE_ID, jayeCandidates, 0, 0),
+            tp_e1Jaye: evalCoreOperatorTp(currentRoster, base, rotation.flags, JAYE_ID, jayeCandidates, 1),
 
-        // ========== POWER PLANT ==========
+            tp_singles: evalTpSingles(currentRoster, base, rotation.flags),
+            tp_pairs: evalTpPairs(currentRoster, base, rotation.flags),
 
-        pp_squads: evalPPTeams(roster, base),
+            // ========== RECEPTION ROOM ==========
 
-        // ========== HUMAN RESOURCES (OFFICE) ==========
+            rr_squads: evalRRTeams(currentRoster, base, rotation.flags),
 
-        hr_operators: evalOfficeOps(roster, base),
+            // ========== POWER PLANT ==========
 
-        // ========== CONTROL CENTER ==========
+            pp_squads: evalPPTeams(currentRoster, base, rotation.flags),
 
-        cc_operators: evalCCTeams(roster, base),
-    };
-    console.log(scores);
-    console.log(upgradedOps);
+            // ========== HUMAN RESOURCES (OFFICE) ==========
 
-    /********************************************************************
-     ********** Planning the rotations based on above findings **********
-     ********************************************************************/
+            hr_operators: evalOfficeOps(currentRoster, base),
+
+            // ========== CONTROL CENTER ==========
+
+            cc_operators: evalCCTeams(currentRoster, base),
+        };
+        console.log(scores);
+        console.log(upgradedOps);
+
+        break;
+
+        /********************************************************************
+         ********** Planning the rotations based on above findings **********
+         ********************************************************************/
+
+    }
 };
