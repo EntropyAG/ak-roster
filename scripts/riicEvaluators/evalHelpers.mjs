@@ -163,9 +163,12 @@ export const getTradingPostStats = (ops, base, flags = DEFAULT_FLAGS, tpLvl = 3)
 
     let tpDefaultCap = TP_CAPS[tpLvl];
 
-    // If we have a Gnosis (de)buff, then we also do the calcs without it. We'll return the best result of the two.
+    /**
+     * If we have a Gnosis (de)buff and at least one KT operator, then we also do the calcs without it. We'll
+     * return the best result of the two.
+     */ 
     let resultsWithoutGnosis;
-    if(flags.gnosisBuff === 1){
+    if(flags.gnosisBuff === 1 && buffs.karlan_trade_operator_count > 0){
         let tmpFlags = structuredClone(flags);
         tmpFlags.gnosisBuff = 0;
         resultsWithoutGnosis = getTradingPostStats(ops, base, tmpFlags, tpLvl);
@@ -313,7 +316,7 @@ export const getTradingPostStats = (ops, base, flags = DEFAULT_FLAGS, tpLvl = 3)
         "totalProductivity": totalTpProductivity + eqFacProductivity,
         "tpProductivity": totalTpProductivity,
         "facProductivity": eqFacProductivity,
-        "usesGnosis": flags.gnosisBuff
+        "usesGnosis": buffs.karlan_trade_operator_count > 0 ? flags.gnosisBuff : false
     };
 };
 
