@@ -513,15 +513,15 @@ export const getFactoryStats = (ops, base, flags = DEFAULT_FLAGS) => {
      * Special conditions, because she doesn't work with Automation / Abyssal hunters (handled elsewhere)
      * and most importantly Purestream, hence why it's added separately
      */
-    allPD +=
+    allPD += buffs.waai_fu_copy_productivity * Math.min(
         Math.floor(
-            Math.min(
-                buffs.waai_fu_copy_productivity / 5,
+            Math.max(
                 (allPD + goldPD) / 5,
                 (allPD + expPD) / 5
             ) * 5
-        )
-    ;
+        ),
+        40 // Cap to copied PD
+    );
 
     // Purestream
     goldPD += buffs.productivity_gold_per_trading_post * base.getTradingPostCount();
