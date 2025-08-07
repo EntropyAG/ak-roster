@@ -12,7 +12,8 @@ import {
     samiOperators,
     lungmenGuardOperators,
     alterOperators,
-    ursusStudentOperators
+    ursusStudentOperators,
+    glasgowOperators
 } from "data/riic/operators.ts";
 
 import { DEFAULT_FLAGS } from "../basemaker.mjs";
@@ -101,10 +102,17 @@ export const getTradingPostStats = (ops, base, flags = DEFAULT_FLAGS, tpLvl = 3)
         "productivity_per_total_cap": 0,
         "productivity_per_diff_max_to_current": 0,
         "cap_per_10_external_productivity": 0,
+        // Terra Research Commission
+        "productivity_per_felvine": 0,
         // Degenbrecher
         "productivity_per_5_external_cap": 0,
         // Firewhistle
         "productivity_to_others": 0,
+        // Morgan
+        "glasgow_operator_count": 0,
+        "productivity_per_glasgow": 0,
+        "productivity_if_siege_present": 0,
+        "is_siege_present": 0,
         // Lappland & Texas
         "productivity_if_lappland_present": 0,
         "is_texas_present": 0,
@@ -159,6 +167,16 @@ export const getTradingPostStats = (ops, base, flags = DEFAULT_FLAGS, tpLvl = 3)
         if(lateranoOperators.includes(operator.op_id)){
             buffs.laterano_op_count++;
         }
+
+        // Glasgow gang
+        if(glasgowOperators.includes(operator.op_id)){
+            buffs.glasgow_operator_count++;
+        }
+
+        // Siege present (for Morgan)
+        if(operator.op_id === "char_112_siege"){
+            buffs.is_siege_present = 1;
+        }
     }
 
     let tpDefaultCap = TP_CAPS[tpLvl];
@@ -179,11 +197,18 @@ export const getTradingPostStats = (ops, base, flags = DEFAULT_FLAGS, tpLvl = 3)
         buffs.productivity_flat
         // Gnosis buff (only active if Jaye or Swire alter part of team)
         + flags.gnosisBuff * buffs.karlan_trade_operator_count * -15
+        // Monster Hunter
+        + buffs.productivity_per_felvine * flags.felvine
         // Degenbrecher (not debuffed by Jaye)
         + Math.max(
             Math.min(buffs.productivity_per_5_external_cap * Math.floor(buffs.cap_flat / 5), 100),
             0
         )
+        // Delphine (CC)
+        + flags.delphineInCC * buffs.glasgow_operator_count * 10
+        // Morgan
+        + buffs.productivity_per_glasgow * buffs.glasgow_operator_count
+        + buffs.is_siege_present * buffs.productivity_if_siege_present
         // Firewhistle
         + buffs.productivity_to_others * (ops.length - 1)
         // Texas / Lappy
@@ -355,6 +380,8 @@ export const getFactoryStats = (ops, base, flags = DEFAULT_FLAGS) => {
         // Metalwork (Bryophyta core)
         "productivity_per_metalwork": 0,
         "metalwork_skill_count": 0,
+        // Terra Research Commission (Monster Hunter)
+        "productivity_per_felvine": 0,
         // Vermeil
         "productivity_per_total_cap_vermeil": 0,
         "is_bubble_absent": 1,
@@ -453,6 +480,8 @@ export const getFactoryStats = (ops, base, flags = DEFAULT_FLAGS) => {
                 buffs.rhine_tech_skill_count + buffs.pinus_sylvestris_skill_count
             )
         )
+        // Terra Research Commission
+        + buffs.productivity_per_felvine * flags.felvine
         // Pinus Sylvestris
         + buffs.pinus_sylvestris_skill_count * flags.hasVivianaBuff * 7
         // Wild Mane
