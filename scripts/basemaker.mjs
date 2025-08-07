@@ -5,20 +5,13 @@ import operators from "data/operators.json";
 import evalAbyssalHunters  from "./riicEvaluators/special/evalAbyssalHunters.mjs";
 import evalAutomation      from "./riicEvaluators/special/evalAutomation.mjs";
 import evalBabel           from "./riicEvaluators/special/evalBabel.mjs";
-import evalDungeonMeshi    from "./riicEvaluators/special/evalDungeonMeshi.mjs";
-import evalGlasgow         from "./riicEvaluators/special/evalGlasgow.mjs";
-import evalKarlanTrade     from "./riicEvaluators/special/evalKarlanTrade.mjs";
-import evalMonsterHunter   from "./riicEvaluators/special/evalMonsterHunter.mjs";
 import evalPiSr            from "./riicEvaluators/special/evalPiSr.mjs";
-import evalPinusSylvestris from "./riicEvaluators/special/evalPinusSylvestris.mjs";
 import evalPudding         from "./riicEvaluators/special/evalPudding.mjs";
 import evalWordlyPlight    from "./riicEvaluators/special/evalWordlyPlight.mjs";
-import evalBSW             from "./riicEvaluators/special/evalBSW.mjs";
 
 import evalCoreOperatorFac from "./riicEvaluators/factory/evalCoreOperatorFac.mjs";
 import evalFacOperators    from "./riicEvaluators/factory/evalFacOperators.mjs";
 
-import evalCoreOperatorTp  from "./riicEvaluators/tradingPost/evalCoreOperatorTp.mjs";
 import evalPozyGLP         from "./riicEvaluators/tradingPost/evalPozyGLP.mjs";
 import evalShamare         from "./riicEvaluators/tradingPost/evalShamare.mjs";
 import evalTpOperators     from "./riicEvaluators/tradingPost/evalTpOperators.mjs";
@@ -31,11 +24,10 @@ import evalOfficeOps       from "./riicEvaluators/office/evalOfficeOps.mjs";
 
 import evalCCTeams         from "./riicEvaluators/controlCenter/evalCCTeams.mjs";
 
-import { vermeilBubbleTeamCandidates, jayeCandidates, bswOperators, robotOperators, rhineLabOperators } from "data/riic/operators";
+import { vermeilBubbleTeamCandidates, bswOperators, robotOperators, rhineLabOperators } from "data/riic/operators";
 
 const VERMEIL_ID = "char_190_clour";
 const BUBBLE_ID = "char_381_bubble";
-const JAYE_ID = "char_272_strong";
 
 const MAX_ROTATION = 3;
 
@@ -52,8 +44,10 @@ export const DEFAULT_FLAGS = {
     // Trading Post
     gnosisBuff: 0,
     inesInBase: 0,
+    delphineInCC: 0,
     wInBase: 0,
     ulpianusInBase: 0,
+    felvine: 0,
     // Factory
     hasVivianaBuff: 0,
     hasFlametailBuff: 0,
@@ -130,10 +124,12 @@ export const planify = (roster, base, assumePromotionLevel) => {
 
         let currentRoster = structuredClone(roster);
         let phantomFlags = __fillInFlags(currentRoster, base);
+        let flags = structuredClone(DEFAULT_FLAGS);
 
         /**
-         * We do an initial evaluation with all the flags activated to know the highest potential for all teams/operators
-         * based on the current roster. Flags shoulds be activated in a separate variable when actually slotting operators.
+         * We do an initial evaluation with all the flags activated (phantom flags) to know the highest potential for all
+         * teams/operators based on the current roster. Flags shoulds be activated in a separate variable when actually
+         * slotting operators.
          */
         let scores = {
             // ========== SPECIAL ==========
@@ -141,13 +137,7 @@ export const planify = (roster, base, assumePromotionLevel) => {
             spl_piSrSquad: evalPiSr(currentRoster, base, phantomFlags),
             spl_wpSquad: evalWordlyPlight(currentRoster, base, phantomFlags),
             spl_automation: evalAutomation(currentRoster, base, phantomFlags),
-            spl_pinus: evalPinusSylvestris(currentRoster, base, phantomFlags),
-            spl_glasgow: evalGlasgow(currentRoster, base, phantomFlags),
-            spl_karlan: evalKarlanTrade(currentRoster, base, phantomFlags),
-            spl_monhun: evalMonsterHunter(currentRoster),
             spl_abyHunt: evalAbyssalHunters(currentRoster),
-            spl_jessBSW: evalBSW(currentRoster),
-            spl_dunMes: evalDungeonMeshi(currentRoster, base, phantomFlags),
             spl_babel: evalBabel(currentRoster),
             spl_pudding: evalPudding(currentRoster),
 
@@ -185,8 +175,30 @@ export const planify = (roster, base, assumePromotionLevel) => {
 
             cc_operators: evalCCTeams(currentRoster, base),
         };
+
         console.log(scores);
         console.log(upgradedOps);
+
+        /**
+         * Initial evaluation done, starting to slot in operators based on the above scores. Global flags will
+         * be set manually from now on.
+         */
+
+
+
+        // Operators in dorms are done first, since they provide effects while costing effectively nothing
+        if(roster["char_4143_sensi"]?.elite === 2){
+            flags.monsterMealCount = base.getHighestDormLevel();
+        }
+        // TODO: Senshi
+        // TODO: Pozyomka (durins)
+        // TODO: PI/SR - Virtuosa E0+, Czerny E2, Iris E2
+
+        // CC flags
+        // TODO: Delphine
+        // TODO: Jessicat
+        // TODO: Vivi / Flametail
+        // TODO: Felvine
 
         break;
 
@@ -220,8 +232,24 @@ const __fillInFlags = (roster, base) => {
         flags.wInBase = 1;
     }
 
+    if(roster["char_4110_delphn"]?.elite === 2){
+        flags.delphineInCC = 1;
+    }
+
     if(roster["char_4145_ulpia"]){
         flags.ulpianusInBase = 1;
+    }
+
+    // Fac + TP
+    if(roster["char_1029_yato2"]){
+        flags.felvine += 8;
+    }
+
+    if(roster["char_1030_noirc2"]){
+        flags.felvine += 2;
+        if(roster["char_1029_yato2"]){
+            flags.felvine += 2;
+        }
     }
 
     // Factory

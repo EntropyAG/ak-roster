@@ -51,6 +51,12 @@ export const riicSkills = {
         "productivity_flat": 10,
         "cap_all_flat": 10
     },
+    // Terra Research Commission E0 30
+    "manu_prod_spd&limit&bd[000]":{
+        "productivity_flat": 5,
+        "productivity_per_felvine": 1,
+        "cap_all_flat": 8
+    },
     // Vulcan E0
     "manu_prod_spd&limit&cost[000]":{
         "productivity_flat": -5,
@@ -445,6 +451,11 @@ export const riicSkills = {
         "productivity_flat": 30,
         "productivity_if_ulpianus_in_base": 10
     },
+    // Morgan E2
+    "trade_ord_spd_par[000]":{
+        "productivity_per_glasgow": 20,
+        "productivity_if_siege_present": 35
+    },
     // Exusiai alter E2
     "trade_ord_spd_par[001]":{
         "productivity_per_laterano": 15,
@@ -600,6 +611,12 @@ export const riicSkills = {
     "trade_ord_spd&limit[101]": {
         "productivity_flat": 25,
         "cap_flat": -6
+    },
+    // Terra Research Commision E0
+    "trade_ord_spd&limit&bd[000]":{
+        "productivity_flat": 5,
+        "productivity_per_felvine": 3,
+        "cap_flat": 2
     },
     // Degenbrecher E2
     "trade_ord_spd_variable3[000]": {

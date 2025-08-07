@@ -96,6 +96,13 @@ export const souboAdventurersOperators = [
     "char_4077_palico",  // Terra Research Commission
 ];
 
+export const glasgowOperators = [
+    "char_112_siege",  // Siege
+    "char_155_tiger",  // Indra
+    "char_157_dagda",  // Dagda
+    "char_154_morgan", // Morgan
+];
+
 export const alterOperators = [
     "char_1011_lava2",  // Lava alter
     "char_1012_skadi2", // Skadi alter
@@ -253,6 +260,7 @@ export const facGeneralistOperators = [
     "char_240_wyvern",  // Vanilla
     "char_500_noirc",   // Noir Corne
     "char_502_nblade",  // Yato
+    "char_4077_palico", // Terra Research Commission
 ];
 
 /**************************************
@@ -269,14 +277,17 @@ export const tpOperators = [
     "char_172_svrash",  // Silverash
     "char_1033_swire2", // Swire alter
     "char_427_vigil",   // Vigil
+    "char_112_siege",   // Siege
     "char_1019_siege2", // Siege alter
     "char_365_aprl",    // April
     "char_325_bison",   // Bison
     "char_4144_chilc",  // Chilchuck
     "char_173_slchan",  // Cliffheart
     "char_201_moeshd",  // Croissant
+    "char_157_dagda",   // Dagda
     "char_493_firwhl",  // Firewhistle
     "char_4045_heidi",  // Heidi
+    "char_155_tiger",   // Indra
     "char_4203_kichi",  // Kichisei
     "char_4147_mitm",   // Mitm
     "char_154_morgan",  // Morgan
@@ -308,6 +319,7 @@ export const tpOperators = [
     "char_240_wyvern",  // Vanilla
     "char_500_noirc",   // Noir Corne
     "char_502_nblade",  // Yato
+    "char_4077_palico", // Terra Research Commission
 ];
 
 /*************************************
