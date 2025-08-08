@@ -4,7 +4,6 @@ import operators from "data/operators.json";
 
 import evalAbyssalHunters  from "./riicEvaluators/special/evalAbyssalHunters.mjs";
 import evalAutomation      from "./riicEvaluators/special/evalAutomation.mjs";
-import evalBabel           from "./riicEvaluators/special/evalBabel.mjs";
 import evalPiSr            from "./riicEvaluators/special/evalPiSr.mjs";
 import evalPudding         from "./riicEvaluators/special/evalPudding.mjs";
 import evalWordlyPlight    from "./riicEvaluators/special/evalWordlyPlight.mjs";
@@ -13,7 +12,6 @@ import evalCoreOperatorFac from "./riicEvaluators/factory/evalCoreOperatorFac.mj
 import evalFacOperators    from "./riicEvaluators/factory/evalFacOperators.mjs";
 
 import evalPozyGLP         from "./riicEvaluators/tradingPost/evalPozyGLP.mjs";
-import evalShamare         from "./riicEvaluators/tradingPost/evalShamare.mjs";
 import evalTpOperators     from "./riicEvaluators/tradingPost/evalTpOperators.mjs";
 
 import evalRRTeams         from "./riicEvaluators/receptionRoom/evalRRTeams.mjs";
@@ -29,7 +27,7 @@ import { vermeilBubbleTeamCandidates, bswOperators, robotOperators, rhineLabOper
 const VERMEIL_ID = "char_190_clour";
 const BUBBLE_ID = "char_381_bubble";
 
-const MAX_ROTATION = 3;
+const MAX_ROTATION = 1;
 
 const MAX_ELITE_PER_RARITY = {
     1: 0,
@@ -138,7 +136,6 @@ export const planify = (roster, base, assumePromotionLevel) => {
             spl_wpSquad: evalWordlyPlight(currentRoster, base, phantomFlags),
             spl_automation: evalAutomation(currentRoster, base, phantomFlags),
             spl_abyHunt: evalAbyssalHunters(currentRoster),
-            spl_babel: evalBabel(currentRoster),
             spl_pudding: evalPudding(currentRoster),
 
             // ========== FACTORY ==========
@@ -152,7 +149,6 @@ export const planify = (roster, base, assumePromotionLevel) => {
 
             // ========== TRADING POST ==========
 
-            tp_shamare: evalShamare(currentRoster),
             tp_pozyGLP: evalPozyGLP(currentRoster, base),
 
             tp_singles: evalTpOperators(currentRoster, base, phantomFlags, 1),
@@ -177,19 +173,26 @@ export const planify = (roster, base, assumePromotionLevel) => {
         };
 
         console.log(scores);
-        console.log(upgradedOps);
 
         /**
          * Initial evaluation done, starting to slot in operators based on the above scores. Global flags will
          * be set manually from now on.
          */
 
+        __fillTradingPosts(currentRoster, base, scores, rotation, flags);
 
+        
+
+        /**
+         * STEP 2
+         * ======
+         * Fill the trading post with the best possible teams
+         */
 
         // Operators in dorms are done first, since they provide effects while costing effectively nothing
-        if(roster["char_4143_sensi"]?.elite === 2){
+        /*if(roster["char_4143_sensi"]?.elite === 2){
             flags.monsterMealCount = base.getHighestDormLevel();
-        }
+        }*/
         // TODO: Senshi
         // TODO: Pozyomka (durins)
         // TODO: PI/SR - Virtuosa E0+, Czerny E2, Iris E2
@@ -199,8 +202,6 @@ export const planify = (roster, base, assumePromotionLevel) => {
         // TODO: Jessicat
         // TODO: Vivi / Flametail
         // TODO: Felvine
-
-        break;
 
         /********************************************************************
          ********** Planning the rotations based on above findings **********
@@ -314,4 +315,139 @@ const __fillInFlags = (roster, base) => {
     console.log("RETURNING PHANTOM FLAGS");
     console.log(flags);
     return flags;
+};
+
+const __fillTradingPosts = (roster, base, scores, rotation, flags) => {
+    // First, check how many TPs of each there are
+    let tps = [];
+    for(let prodFacility of Object.values(rotation)){
+        if(prodFacility.type === "TP")
+            tps.push(prodFacility.level);
+    }
+    tps = tps.filter(e => e !== 0);
+    let best = __getBestTradingPostCombo(scores, tps);
+    // If the player has Proviso, put her preferably in a lvl 2 TP first
+
+    // Then, fill in the rest as operato
+
+    console.log(best);
+};
+
+
+/**
+ * Used to smoothly insert operators in a facility, making sure we respect the slot count,
+ * update the flags and remove them from the roster, to make sure they don't get inserted
+ * multiple times in the same rotation.
+ * @param {*} operator 
+ * @param {*} facility 
+ */
+const __insertOperator = (roster, operator, facility, flags) => {
+    
+};
+
+/**
+ * Mix and match different TP setups with operators shared between several trading posts and return
+ * the one with the highest overall productivity.
+ *
+ * This is one possible approach to the NP-hard problem of Maximum Weight Bipartite Matching.
+ * We'll resort to graph theory for that one. Because each operator leads to an exponential increase
+ * to the number of calculations required, we'll do a greedy heuristic approach, where we only consider
+ * the teams that performed the best during the initial evaluation.
+ * 
+ * The way it works is as follows:
+ * 
+ * 1) We pre-filter the teams to remove the less relevant ones (average productivity that is too low
+ * for instance)
+ * 2) We add as many layers (arrays) as there are trading posts. Each layer is filled with the best
+ * performing teams that match the TP's level (e.g: a lvl 3 TP will only have teams with 3 ops and
+ * so on). We connect each layer to the following one.
+ * The vertices thus produced have a weight equal to the total productivity of the target node. For each
+ * vertice that is created, we keep track of the previous operators that were used. If any operator in the
+ * target node has already appeared, we check the next node.
+ * 3) We run through each possible path, each time noting the sum of the weights of the paths we are going
+ * through. The sum matches the total productivity of all the teams used. Each time we obtain a new sum,
+ * we update the highest if the new one is higher than the previous highest recorded
+ */
+const __getBestTradingPostCombo = (scores, tps) => {
+
+    let tmpScores = structuredClone(scores);
+    // 1) Pre-filtering
+    tmpScores.tp_pairs = tmpScores.tp_pairs.slice(0, 400);
+    tmpScores.tp_triplets = tmpScores.tp_triplets.slice(0, 800);
+
+
+    // 2) We create the matrix used for traversal
+    let teamsTpMatrix = [];
+    for(let tp of tps){
+        let teamsToPush = tmpScores.tp_singles;
+        if(tp === 3){
+            teamsToPush = tmpScores.tp_triplets;
+        }else if(tp === 2){
+            teamsToPush = tmpScores.tp_pairs;
+        }
+        teamsTpMatrix.push(teamsToPush);
+    }
+
+    // 3) We go through all the valid nodes (see function description)
+    let best = {
+        sum: 0,
+        teams: []
+    };
+    let traversedNodes = [];
+    let nextId = 0;
+    let tpIdx = 0;
+    let teamIdx = 0;
+    // While we still have teams to cover for the first TP
+    while(nextId < teamsTpMatrix[0].length){
+        // Check the status of the next node to explore
+        let currentNode = teamsTpMatrix[tpIdx][teamIdx];
+        // The node actually exists
+        if(currentNode){
+            let operatorsIds = [];
+            for(let node of traversedNodes){
+                for(let operator of node.operators){
+                    operatorsIds.push(operator.op_id);
+                }
+            }
+            // ...and none of the ops are already used, go to the node and record it
+            if(currentNode.operators.filter(e => operatorsIds.includes(e.op_id)).length === 0){
+                traversedNodes.push(currentNode);
+                tpIdx++;
+                teamIdx = 0;
+            // ...But the node uses operators that have already been used before, keep searching a team for that TP
+            }else{
+                teamIdx++;
+            }
+        }
+
+        // We've reached the end with a full team, compare the score and reposition to the next node to evaluate
+        if(tpIdx === teamsTpMatrix.length){
+            let sum = 0;
+            for(let node of traversedNodes){
+                sum += node.totalProductivity;
+            }
+            if(sum > best.sum){
+                best.sum = sum;
+                best.teams = traversedNodes;
+            }
+            nextId++;
+            tpIdx = 0;
+            teamIdx = nextId;
+            traversedNodes = [];
+        }
+
+        // There are no viable solution anymore, proceed to next starting team
+        if(teamIdx === teamsTpMatrix[tpIdx].length){
+            nextId++;
+            tpIdx = 0;
+            teamIdx = nextId;
+            traversedNodes = [];
+        }
+    }
+
+    console.log("it's all over!");
+    console.log(best);
+
+    // 5) Run network flow
+
 };

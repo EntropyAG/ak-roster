@@ -6,7 +6,7 @@ import { tpOperators } from "../../../src/data/riic/operators.ts";
 /**
  * Returns a list of TP operators with all their productivity
  */
-const evalTpOperators = (roster, base, flags, squadSize) => {
+const evalTpOperators = (roster, base, flags, squadSize, extraSquads = []) => {
     let opScores = [];
     // Retrieve all the listed operators, remove those who aren't found to save up on calcs
     let operatorsToTest = Object.values(roster).filter(
@@ -14,6 +14,10 @@ const evalTpOperators = (roster, base, flags, squadSize) => {
     );
 
     let squads = combinations(operatorsToTest, squadSize);
+    for(let extraSquad of extraSquads){
+        squads.push(extraSquad);
+    }
+
     for(let squad of squads){
         let results = getTradingPostStats(squad, base, flags, squadSize);
         opScores.push(results);

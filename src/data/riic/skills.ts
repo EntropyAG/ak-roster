@@ -622,7 +622,11 @@ export const riicSkills = {
     "trade_ord_spd_variable3[000]": {
         "productivity_per_5_external_cap": 25
     },
-    // Bena E2, Bibeak E0, Paprika E0
+    // Shamare E2
+    "trade_ord_vodfox[000]":{
+        "productivity_per_nullified_operator": 45
+    },
+    // Bena E2, Bibeak E0, Paprika E0, Shamare E0
     "trade_ord_wt&cost[000]":{
         "tailoring_alpha": 1
     },

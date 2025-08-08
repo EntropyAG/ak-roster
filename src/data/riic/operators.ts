@@ -280,22 +280,28 @@ export const tpOperators = [
     "char_112_siege",   // Siege
     "char_1019_siege2", // Siege alter
     "char_365_aprl",    // April
+    "char_252_bibeak",  // Bibeak
     "char_325_bison",   // Bison
     "char_4144_chilc",  // Chilchuck
     "char_173_slchan",  // Cliffheart
     "char_201_moeshd",  // Croissant
     "char_157_dagda",   // Dagda
+    "char_499_kaitou",  // Diamante
     "char_493_firwhl",  // Firewhistle
     "char_4045_heidi",  // Heidi
     "char_155_tiger",   // Indra
+    "char_214_kafka",   // Kafka
     "char_4203_kichi",  // Kichisei
     "char_4147_mitm",   // Mitm
     "char_154_morgan",  // Morgan
+    "char_4071_peper",  // Paprika
     "char_4032_provs",  // Proviso
     "char_4163_rosesa", // Rose Salt
     "char_4140_lasher", // Sand Reckoner
+    "char_254_vodfox",  // Shamare
     "char_383_snsant",  // Snowsant
     "char_101_sora",    // Sora
+    "char_486_takila",  // Tequila
     "char_4137_udflow", // Underflow
     "char_302_glaze",   // Ambriel
     "char_198_blackd",  // Courier

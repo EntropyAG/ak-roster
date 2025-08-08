@@ -98,6 +98,8 @@ export const getTradingPostStats = (ops, base, flags = DEFAULT_FLAGS, tpLvl = 3)
         "karlan_trade_operator_count": 0,
         // Swire alter
         "productivity_per_external_cap": 0,
+        // Shamare
+        "productivity_per_nullified_operator": 0,
         // Jaye
         "productivity_per_total_cap": 0,
         "productivity_per_diff_max_to_current": 0,
@@ -227,7 +229,7 @@ export const getTradingPostStats = (ops, base, flags = DEFAULT_FLAGS, tpLvl = 3)
         + buffs.productivity_per_recipe * base.getDifferentRecipesCount()
         // Hoederer
         + buffs.productivity_if_ines_working * flags.inesInBase
-        + buffs.productivity_if_ines_or_w_working * Math.max(flags.inesInBase, flags.wInBase)
+        + buffs.productivity_if_ines_or_w_working * (flags.inesInBase + flags.wInBase)
         // Underflow
         + buffs.productivity_if_ulpianus_in_base * flags.ulpianusInBase
     ;
@@ -260,6 +262,14 @@ export const getTradingPostStats = (ops, base, flags = DEFAULT_FLAGS, tpLvl = 3)
     // Swire alter exclusive
     + buffs.productivity_per_external_cap * bonusCap;
 
+    // Shamare (overwrites productivity completely)
+    if(buffs.productivity_per_nullified_operator > 0){
+        totalTpProductivity = buffs.productivity_per_nullified_operator * (ops.length-1);
+    }
+
+    // Represents the productivity before adjustments from order modifications, but with CC TP buff (7%) + innate (3%)
+    let nonAdjustedProductivity = structuredClone(totalTpProductivity) + 10;
+
     // Tailoring buffs + Tequila + Proviso
     let eqFacProductivity = 0;
     let weightIdx = 0;
@@ -278,7 +288,7 @@ export const getTradingPostStats = (ops, base, flags = DEFAULT_FLAGS, tpLvl = 3)
     let weightedLMDValue =
         weights[0] * tpOrders.goldValues[0] * (2 + buffs.defaulted_order_extra_bar)
       + weights[1] * tpOrders.goldValues[0] * (3 + buffs.defaulted_order_extra_bar)
-      + weights[2] * tpOrders.goldValues[0] * 4 +  buffs.max_order_extra_lmd_value;
+      + weights[2] * (tpOrders.goldValues[0] * 4 + buffs.max_order_extra_lmd_value);
 
     let weightedTime =
         weights[0] * tpOrders.time[2]
@@ -323,7 +333,7 @@ export const getTradingPostStats = (ops, base, flags = DEFAULT_FLAGS, tpLvl = 3)
         let weightedExtraBarsPerOrder = weights[2]
           * (buffs.max_order_extra_lmd_value === 500 ? 1 : 0.5);
         let weightedGoldBonus = weightedExtraBarsPerOrder * MN_PER_DAY / weightedTime / BASELINE_FAC_GOLD_PER_DAY;
-        let goldContribution = weightedGoldBonus * (100 + totalTpProductivity) / 100;
+        let goldContribution = weightedGoldBonus * (100 + nonAdjustedProductivity) / 100;
         eqFacProductivity = roundTo(goldContribution * 100, 2);
     }
 
@@ -333,9 +343,7 @@ export const getTradingPostStats = (ops, base, flags = DEFAULT_FLAGS, tpLvl = 3)
     }
 
     return {
-        "operator1": ops[0],
-        "operator2": ops[1],
-        "operator3": ops[2],
+        "operators": ops,
         "bonusCap": bonusCap,
         "totalCap": bonusCap + tpDefaultCap,
         "totalProductivity": totalTpProductivity + eqFacProductivity,
@@ -559,9 +567,7 @@ export const getFactoryStats = (ops, base, flags = DEFAULT_FLAGS) => {
     goldPD += buffs.productivity_gold_per_trading_post * base.getTradingPostCount();
 
     return {
-        "operator1": ops[0],
-        "operator2": ops[1],
-        "operator3": ops[2],
+        "operator": ops,
         "expCap": buffs.cap_exp_flat,
         "totalCap": buffs.cap_all_flat + buffs.cap_exp_flat,
         "totalProductivity": roundTo(allPD, 2),
@@ -660,8 +666,7 @@ export const getReceptionRoomStats = (ops, base, flags = DEFAULT_FLAGS) => {
     ;
 
     return {
-        "operator1": ops[0],
-        "operator2": ops[1],
+        "operators": ops,
         "clueSpeed": clueSpeed
     };
 };
@@ -730,9 +735,7 @@ export const getPowerPlantStats = (ops, base, flags = DEFAULT_FLAGS) => {
     ;
 
     return {
-        "operator1": ops[0],
-        "operator2": ops[1],
-        "operator3": ops[2],
+        "operator": ops,
         "droneSpeed": droneSpeed,
         "wildmanePd": buffs.productivity_to_wild_mane
     };
@@ -900,11 +903,7 @@ export const getControlCenterStats = (ops) => {
     let clueSpeed = buffs.clue_speed;
 
     return {
-        "operator1": ops[0],
-        "operator2": ops[1],
-        "operator3": ops[2],
-        "operator4": ops[3],
-        "operator5": ops[4],
+        "operators": ops,
         "moraleDrainCC": moraleDrainCC,
         "moraleDrainOthers": roundTo(moraleDrainOthers, 2),
         "moraleRecDorm": moraleRecDorm,
