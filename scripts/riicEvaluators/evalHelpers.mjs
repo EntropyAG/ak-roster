@@ -567,12 +567,12 @@ export const getFactoryStats = (ops, base, flags = DEFAULT_FLAGS) => {
     goldPD += buffs.productivity_gold_per_trading_post * base.getTradingPostCount();
 
     return {
-        "operator": ops,
+        "operators": ops,
         "expCap": buffs.cap_exp_flat,
         "totalCap": buffs.cap_all_flat + buffs.cap_exp_flat,
         "totalProductivity": roundTo(allPD, 2),
-        "totalExpProductivity": roundTo(allPD + expPD, 2),
-        "totalGoldProductivity": roundTo(allPD + goldPD, 2)
+        "expProductivity": roundTo(allPD + expPD, 2),
+        "goldProductivity": roundTo(allPD + goldPD, 2)
     };
 };
 
@@ -735,7 +735,7 @@ export const getPowerPlantStats = (ops, base, flags = DEFAULT_FLAGS) => {
     ;
 
     return {
-        "operator": ops,
+        "operators": ops,
         "droneSpeed": droneSpeed,
         "wildmanePd": buffs.productivity_to_wild_mane
     };
