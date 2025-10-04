@@ -123,4 +123,34 @@ export class Riic {
 	getDroneCap(){
 		return 225;
 	}
+
+	getTradingPostSlotCount(){
+		let sum = 0;
+		for (let facility of this.production) {
+			if (facility.type === "TP"){
+				sum += facility.level;
+			}
+		}
+		return sum;
+	}
+
+	getFactoryGoldSlotCount(){
+		let sum = 0;
+		for (let facility of this.production) {
+			if (facility.type === "FAC" && facility.product === "gold"){
+				sum += facility.level;
+			}
+		}
+		return sum;
+	}
+
+	getFactoryExpSlotCount(){
+		let sum = 0;
+		for (let facility of this.production) {
+			if (facility.type === "FAC" && facility.product === "exp"){
+				sum += facility.level;
+			}
+		}
+		return sum;
+	}
 };
