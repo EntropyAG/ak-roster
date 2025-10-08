@@ -38,17 +38,24 @@ import ItemBase from "../depot/ItemBase";
 import DepotItem from "types/depotItem";
 import { Item } from "types/item";
 import canCompleteByCrafting from "util/fns/depot/canCompleteByCrafting";
-import GoalData, { GoalDataInsert, getPlannerGoals } from "types/goalData";
+import GoalData, { GoalDataInsert, GoalsFilteredCalculatedMap, getPlannerGoals } from "types/goalData";
 import getGoalIngredients from "util/fns/depot/getGoalIngredients";
 import { OperatorData } from "types/operators/operator";
 import operators from "data/operators";
 import useOperators from "util/hooks/useOperators";
 import { defaultOperatorObject, MAX_SKILL_LEVEL_BY_PROMOTION } from "util/changeOperator"
 import depotToExp from "util/fns/depot/depotToExp";
-import { customItemsSort, EXP, farmItemsSort, formatNumber, getFarmCSS, getItemBaseStyling } from "util/fns/depot/itemUtils";
+import { cloneCompleteDepot, customItemsSort, EXP, farmItemsSort, formatNumber, getFarmCSS, getItemBaseStyling } from "util/fns/depot/itemUtils";
 import EventsSelector from "components/planner/events/EventsSelector";
-import { EventsData, NamedEvent } from "types/events";
+import { EventsData, NamedEvent, UpcomingMaterialsData } from "types/events";
 import { createEmptyNamedEvent } from "util/fns/eventUtils";
+import { LocalStorageSettings } from "types/localStorageSettings";
+import Image from "components/base/Image";
+import imageBase from "util/imageBase";
+import LowPriorityIcon from '@mui/icons-material/LowPriority';
+import PivotTableChartIcon from '@mui/icons-material/PivotTableChart';
+import BlockIcon from '@mui/icons-material/Block';
+import { CompletionIndicator } from "../goals/CompletionIndicator";
 
 type GoalBuilder = Partial<GoalDataInsert>;
 
@@ -60,7 +67,18 @@ interface Props {
     expOwned: number;
     goalsMaterials: Record<string, number>;
     openEvents: (state: boolean) => void;
-    eventsData: EventsData;
+    eventsSource: {
+        source: EventsData,
+        name: String,
+        toggleFunction: (name: string) => void,
+    }
+    upcomingMaterialsData: UpcomingMaterialsData;
+    selectedEvent: NamedEvent,
+    setSelectedEvent: (namedEvent: NamedEvent) => void;
+    groupedGoalsMap: GoalsFilteredCalculatedMap,
+    settings: LocalStorageSettings;
+    setSettings: (settings: LocalStorageSettings | ((settings: LocalStorageSettings) => LocalStorageSettings)) => void;
+    onCraftOne: (itemId: string, isLocal: boolean) => void
 }
 
 const Transition = React.forwardRef(function Transition(
@@ -73,7 +91,11 @@ const Transition = React.forwardRef(function Transition(
 });
 
 const MaterialsSummaryDialog = React.memo((props: Props) => {
-    const { open, onClose, depot, expOwned, goalsMaterials, goalData, openEvents, eventsData } = props;
+    const { open, onClose, depot, expOwned, goalsMaterials, goalData, openEvents, eventsSource, upcomingMaterialsData,
+        selectedEvent, setSelectedEvent,
+        groupedGoalsMap,
+        settings, setSettings,
+        onCraftOne } = props;
     const theme = useTheme();
     const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
     const containerRef = useRef<HTMLElement>(null);
@@ -85,12 +107,13 @@ const MaterialsSummaryDialog = React.memo((props: Props) => {
     const [balanceValue, setBalanceValue] = useState<number>(100);
     const [applyBalance, setApplyBalance] = useState(false);
     const [balanceType, setBalanceType] = useState<string | null>(null);
-
-    const [selectedEvent, setSelectedEvent] = useState<NamedEvent>(createEmptyNamedEvent());
+    const [pivot, setPivot] = useState<boolean>(false);
 
     const [isAccordionExpanded, setAccordionExpanded] = useState(false);
 
     const [roster] = useOperators();
+
+    const eventsData = eventsSource.source;
 
     const HELP_INFORMATION =
         <>
@@ -102,17 +125,22 @@ const MaterialsSummaryDialog = React.memo((props: Props) => {
             <ul>
                 <li>The Summary automatically calculates missing materials and suggests how to obtain them (based on general Arknights knowledge).</li>
                 <li>Includes statistics to assist in decision-making.</li>
+                <li>
+                    <LowPriorityIcon sx={{ display: "inline-block", verticalAlign: "middle" }} /> <strong>Ordered goal calculation</strong> processes goals sequentially by group and Operator, virtually spending resources and crafting as needed. Produces a more realistic crafting order for each next Operator.
+                </li>
+                <li><strong><Typography component="span" color="primary">+1</Typography>: clickable and performs Depot's "Crafting +1"</strong>. Here features <strong>Safe Crafting</strong>: ordered calculation allows to prevent use of ingredients needed for earlier goals in later ones.
+                    Crafts only from the current depot; future income may shorten the crafting list as foresight, but does not affect Craft One availability.</li>
             </ul>
             <strong>2. Overfarming to Balance</strong>
             <ul>
-                <li style={{ verticalAlign: "bottom" }}><strong><CalendarMonthIcon />Balance </strong> inputs adjust farming summary around a target number of available tier 3 materials after goals needs are met.</li>
+                <li ><strong><CalendarMonthIcon sx={{ display: "inline-block", verticalAlign: "middle" }} />Balance </strong> inputs adjust farming summary around a target number of available tier 3 materials after goals needs are met.</li>
                 <li><strong>Algorithm:</strong>
                     <ul>
                         <li>Full balance value is applied to the highest %-usage material that isn't orirock</li>
                         <li>Adjusted values are applied to other materials based on the difference in %-usage.</li>
                         <li>%-usage depends on whether goals are tracked, with priority given to: 1. active goals, 2. all goals, 3. unowned operators statistics.</li>
-                        <li style={{ verticalAlign: "bottom" }}>
-                            The <EventIcon /><strong>Event farms only</strong> button applies the same algorithm but exclusively to 2-3 farmable materials from a selected event.
+                        <li>
+                            The <EventIcon sx={{ display: "inline-block", verticalAlign: "middle" }} /><strong>Event farms only</strong> button applies the same algorithm but exclusively to 2-3 farmable materials from a selected event.
                             (<em>To use this option:</em> select event with set T3 Farms)
                         </li>
                     </ul>
@@ -120,9 +148,12 @@ const MaterialsSummaryDialog = React.memo((props: Props) => {
             </ul>
             <strong>3. Events Tracker Setup</strong> - Planning future upgrades with future income.
             <ul>
-                <li>After adding future Events from Defaults, manually or with import, the Summary will also track free materials.</li>
+                <li>Using future Events from user's Tracker or automatic Defaults, the Summary will also track free materials.</li>
                 <li>Combined materials from selected and previous events are factored into all calculations, reducing required amounts.</li>
                 <li>Highlights farmable tier 3 materials from selected event if they were set in the tracker.</li>
+                <li>
+                    Materials from <BlockIcon sx={{ display: "inline-block", verticalAlign: "middle", color:"primary.main" }} /> disabled Events are ignored.
+                </li>
             </ul>
         </>;
 
@@ -159,6 +190,13 @@ const MaterialsSummaryDialog = React.memo((props: Props) => {
     const handleClose = () => {
         onClose();
     }
+
+    const handleCalculateGoalsInOrder = useCallback(() => {
+        const plannerSettings = { ...settings.plannerSettings };
+        plannerSettings.calculateGoalsInOrder = !(plannerSettings?.calculateGoalsInOrder ?? true);
+
+        setSettings((s) => ({ ...s, plannerSettings }));
+    }, [settings, setSettings]);
 
     const getMaterialsFromGoalData = (goalData: GoalData[]) => {
 
@@ -276,58 +314,6 @@ const MaterialsSummaryDialog = React.memo((props: Props) => {
             setBalanceType(null);
         };
     }
-
-    const getTotalMaterialsUptoSelectedEvent = useCallback(() => {
-        if (!eventsData || selectedEvent.index === -1) return { materials: {}, farmTimes: {}, infiniteTimes: {} };
-
-        const _eventsData = eventsData;
-        const _filteredEvents = Object.entries(_eventsData)
-            .filter(([, eventData]) => eventData.index <= selectedEvent.index);
-        const _eventMaterials = _filteredEvents
-            .reduce((acc, [, eventData]) => {
-                if (!eventData.materials) return acc;
-                Object.entries(eventData.materials).forEach(([id, quantity]) => {
-                    acc[id] = (acc[id] ?? 0) + quantity;
-                });
-                return acc;
-            }, {} as Record<string, number>);
-
-        //store xTimes farms appearances and add 0 mats to totals if missing
-        const _farmTimes = _filteredEvents
-            .reduce((acc, [, eventData]) => {
-                if (eventData.farms) {
-                    eventData.farms.forEach((id) => {
-                        acc[id] = (acc[id] ?? 0) + 1;
-                        if (!_eventMaterials[id]) {
-                            _eventMaterials[id] = 0;
-                        }
-                    })
-                };
-                return acc;
-            }, {} as Record<string, number>);
-
-        const infiniteTimes = _filteredEvents
-            .reduce((acc, [, eventData]) => {
-                (eventData.infinite ?? []).forEach((id) => {
-                    acc[id] = (acc[id] ?? 0) + 1;
-                    if (!_eventMaterials[id]) {
-                        _eventMaterials[id] = 0;
-                    }
-                })
-                return acc;
-            }, {} as Record<string, number>);
-
-        //EXP count
-        const _exp = depotToExp(EXP.reduce((acc, id) => {
-            acc[id] = { material_id: id, stock: _eventMaterials[id] ?? 0 }
-            return acc
-        }, {} as Record<string, DepotItem>));
-
-        if (_exp != 0) _eventMaterials["EXP"] = _exp;
-
-        return { materials: _eventMaterials, farmTimes: _farmTimes, infiniteTimes };
-    }, [selectedEvent, eventsData]
-    );
 
     const includeCraftIds: string[] = useMemo(() => [
         "30013", //Orirock Cluster
@@ -490,10 +476,9 @@ const MaterialsSummaryDialog = React.memo((props: Props) => {
         if (!open) return {
             sortedNeedToFarm: [],
             sortedNeedToCraft: [],
+            sortedNeedToCraftByOpInGroup: [],
             sortedPossibleCraft: [],
             sortedEventMaterials: [],
-            farmTimes: {},
-            infiniteTimes: {},
         };
 
         const craftTier = 4;
@@ -506,26 +491,11 @@ const MaterialsSummaryDialog = React.memo((props: Props) => {
             "Data", //module ingredients
         ];
 
-        // Create a copy of depot from itemsJson list of items to have full itemsList for calcs
-        const _depot = Object.fromEntries(
-            Object.keys(itemsJson).map((key) => [
-                key,
-                { material_id: key, stock: depot[key]?.stock ?? 0 },
-            ])
-        );
-
-        _depot["EXP"] = { material_id: "EXP", stock: expOwned };
-
-        const { materials: _eventMaterials, farmTimes, infiniteTimes } = getTotalMaterialsUptoSelectedEvent();
-
-        Object.entries(_eventMaterials).reduce((acc, [id, quantity]) => {
-            if (acc[id]) {
-                acc[id].stock = (acc[id].stock ?? 0) + quantity;
-            } else {
-                acc[id] = { material_id: id, stock: quantity };
-            }
-            return acc;
-        }, _depot);
+        const { materials: _eventMaterials } = upcomingMaterialsData;
+        //clone depot & add upcoming mats
+        const _depot = cloneCompleteDepot(depot, _eventMaterials);
+        //Fix EXP on top
+        _depot["EXP"] = { material_id: "EXP", stock: expOwned + (_eventMaterials["EXP"] ?? 0) };
 
         const sortedEventMaterials = Object.entries(_eventMaterials)
             .filter(([id]) => !EXP.includes(id))
@@ -551,10 +521,131 @@ const MaterialsSummaryDialog = React.memo((props: Props) => {
 
         addBalanceValue(_materialsNeeded);
 
-        const sortedNeedToCraft = Object.entries(_materialsNeeded)
-            .filter(([id, need]) => craftingList.includes(id) && need - (_depot[id]?.stock ?? 0) > 0)
-            .sort(([itemIdA], [itemIdB]) => customItemsSort(itemIdA, itemIdB, true))
-            .map(([id, need]) => ([id, need - (_depot[id]?.stock ?? 0)] as [string, number]));
+        let sortedNeedToCraft: [string, number][] = [];
+
+        type CraftByOpArray = {
+            groupIndex: number,
+            op_id: string,
+            materials: {
+                current: Map<string, // materialId -> {missing, isCraftable?}
+                    { missing: number, isCraftable: boolean }
+                >;
+                future: [string, number][];          // materialId -> quantity
+            }
+        }[];
+
+        const sortedNeedToCraftByOpInGroup: CraftByOpArray = [];
+        if (!(settings.plannerSettings?.calculateGoalsInOrder ?? true)) {
+
+            sortedNeedToCraft = Object.entries(_materialsNeeded)
+                .filter(([id, need]) => craftingList.includes(id) && need - (_depot[id]?.stock ?? 0) > 0)
+                .sort(([itemIdA], [itemIdB]) => customItemsSort(itemIdA, itemIdB, true))
+                .map(([id, need]) => ([id, need - (_depot[id]?.stock ?? 0)] as [string, number]));
+        } else {
+            //ordered per-group - per-operator scenario
+            const runningFutureDepot = cloneCompleteDepot(_depot);
+            const runningCurrentDepot = cloneCompleteDepot(depot);
+            runningCurrentDepot["EXP"] = { material_id: "EXP", stock: expOwned };
+
+            groupedGoalsMap
+                .sort((a, b) => a.index - b.index)
+                .filter(group => group.hasSubstantialGoals)
+                .forEach(group => {
+                    group.operatorGoals
+                        .filter(opGoal => opGoal.substantial)
+                        .forEach(opGoal => {
+                            const opId = opGoal.operator.op_id;
+                            // Accumulate needed materials per operator
+                            const opInGroupMaterialsNeededFuture: Record<string, number> = {};
+                            const opInGroupMaterialsNeededCurrent: Record<string, number> = {};
+                            opGoal.plannerGoals.forEach(goal => {
+                                goal.ingredients.forEach(ing => {
+                                    opInGroupMaterialsNeededFuture[ing.id] = (opInGroupMaterialsNeededFuture[ing.id] ?? 0) + ing.quantity;
+                                    opInGroupMaterialsNeededCurrent[ing.id] = (opInGroupMaterialsNeededCurrent[ing.id] ?? 0) + ing.quantity;
+                                });
+                            });
+                            // Mutate future depot for hypothetical crafting
+                            canCompleteByCrafting(opInGroupMaterialsNeededFuture, runningFutureDepot, craftingList);
+
+                            // Mutate current depot & get craftable info
+                            const { craftableItems } = canCompleteByCrafting(opInGroupMaterialsNeededCurrent, runningCurrentDepot, craftingList);
+
+                            // Prepare future & current material lists
+                            const futureMaterialsArray: [string, number][] = []; //new Map<string, number>();
+                            const currentMaterialsMap: Map<string, { missing: number, isCraftable: boolean }> = new Map();//[string, number, boolean][] = [];
+
+                            // Future calculation: store quantities in a Map
+                            Object.entries(opInGroupMaterialsNeededFuture)
+                                .sort(([itemIdA], [itemIdB]) => customItemsSort(itemIdA, itemIdB, true))
+                                .forEach(([id, need]) => {
+                                    const have = runningFutureDepot[id]?.stock ?? 0;
+                                    const missing = Math.max(0, need - have);
+                                    if (runningFutureDepot[id]) runningFutureDepot[id].stock = Math.max(0, have - need);
+
+                                    if (missing > 0 && craftingList.includes(id)) {
+                                        futureMaterialsArray.push([id, missing]);
+                                    }
+                                });
+                            // Current calculation: store quantities & craftable info in array
+                            Object.entries(opInGroupMaterialsNeededCurrent)
+                                .sort(([itemIdA], [itemIdB]) => customItemsSort(itemIdA, itemIdB, true))
+                                .forEach(([id, need]) => {
+                                    const have = runningCurrentDepot[id]?.stock ?? 0;
+                                    const missing = Math.max(0, need - have);
+                                    if (runningCurrentDepot[id]) runningCurrentDepot[id].stock = Math.max(0, have - need);
+
+                                    if (missing > 0 && craftingList.includes(id)) {
+                                        const isCraftable = !!craftableItems[id];
+                                        currentMaterialsMap.set(id, { missing, isCraftable });
+                                    }
+                                });
+
+                            // Upgrade craftable flags based on ingredients already in list
+                            const craftableMap = new Map<string, number>(); // matId -> craftable amount
+                            currentMaterialsMap.forEach((value, id) => {
+                                let { missing, isCraftable } = value;
+                                if (!isCraftable) return;
+
+                                const matInfo: Item = itemsJson[id as keyof typeof itemsJson];
+                                if (!matInfo.ingredients?.length) {
+                                    // No ingredients -> nothing to check
+                                    craftableMap.set(id, missing);
+                                    return;
+                                }
+
+                                // Check each ingredient
+                                for (const ing of matInfo.ingredients) {
+                                    const ingInfo: Item = itemsJson[ing.id as keyof typeof itemsJson];
+                                    if (!ingInfo || ingInfo.tier >= matInfo.tier) continue; // only lower-tier ingredients matter
+
+                                    const craftableQty = craftableMap.get(ing.id) ?? 0;
+                                    const recipeQty = ing.quantity
+                                    const neededQty = recipeQty * missing; // amount required to craft fully
+
+                                    if ((neededQty - craftableQty) < recipeQty) {
+                                        //means: difference with low tier ingredients is not enough to craft
+                                        isCraftable = false;
+                                        break;
+                                    }
+                                }
+                                currentMaterialsMap.set(id, { missing, isCraftable });
+                                if (isCraftable) craftableMap.set(id, missing);
+                            });
+
+
+                            if (currentMaterialsMap.size > 0) {
+                                sortedNeedToCraftByOpInGroup.push({
+                                    groupIndex: group.index,
+                                    op_id: opId,
+                                    materials: {
+                                        current: currentMaterialsMap,
+                                        future: futureMaterialsArray
+                                    }
+                                });
+                            }
+                        });
+                });
+        }
 
         const sortedNeedToFarm = Object.entries(_materialsNeeded)
             .filter(([id, need]) => !craftingList.includes(id) && need - (_depot[id]?.stock ?? 0) > 0)
@@ -603,17 +694,18 @@ const MaterialsSummaryDialog = React.memo((props: Props) => {
         return {
             sortedNeedToFarm,
             sortedNeedToCraft,
+            sortedNeedToCraftByOpInGroup,
             sortedPossibleCraft,
             sortedEventMaterials,
-            farmTimes,
-            infiniteTimes
         }
     }, [open, goalsMaterials, depot, expOwned, includeCraftIds, selectedEvent,
-        getTier3StatisticFromMaterials, getTotalMaterialsUptoSelectedEvent,
-        addBalanceValue]
+        getTier3StatisticFromMaterials,
+        addBalanceValue, upcomingMaterialsData, groupedGoalsMap,
+        settings.plannerSettings.calculateGoalsInOrder]
     );
 
-    const { sortedNeedToFarm, sortedNeedToCraft, sortedPossibleCraft, sortedEventMaterials, farmTimes, infiniteTimes } = useMemo(calculateSummaryTab, [calculateSummaryTab]);
+    const { sortedNeedToFarm, sortedNeedToCraft, sortedNeedToCraftByOpInGroup, sortedPossibleCraft, sortedEventMaterials } = useMemo(calculateSummaryTab, [calculateSummaryTab]);
+    const { farmTimes, infiniteTimes } = upcomingMaterialsData;
 
     const getTotalsTooltipText = useCallback((id: string) => {
         const lines: string[] = [];
@@ -636,7 +728,7 @@ const MaterialsSummaryDialog = React.memo((props: Props) => {
                 onClose={handleClose}
                 TransitionComponent={Transition}
                 fullScreen={fullScreen}
-                keepMounted fullWidth maxWidth="md">
+                keepMounted fullWidth maxWidth="lg">
                 <DialogTitle
                     sx={{
                         display: "grid",
@@ -760,7 +852,8 @@ const MaterialsSummaryDialog = React.memo((props: Props) => {
                             mountOnEnter
                             unmountOnExit>
                             <Box>
-                                {sortedNeedToFarm.length === 0 && sortedNeedToCraft.length === 0 ? (
+                                {sortedNeedToFarm.length === 0 &&
+                                    (sortedNeedToCraft.length === 0 && sortedNeedToCraftByOpInGroup.length === 0) ? (
                                     <>
                                         <Typography variant="h3" p={2} fontWeight="bold">All requirements are met</Typography>
                                     </>
@@ -823,47 +916,139 @@ const MaterialsSummaryDialog = React.memo((props: Props) => {
                                                 </Stack>
                                             </>
                                         ) : null}
-                                        {sortedNeedToCraft.length > 0 ? (
-                                            <>
-                                                <Typography variant="h3" p={1} fontWeight="bold">Craft high tier materials</Typography>
-                                                {sortedNeedToCraft
-                                                    .map(([id, need]) => (
-                                                        <ItemBase key={id} itemId={id} size={getItemBaseStyling("summary", fullScreen).itemBaseSize}>
-                                                            <Typography {...getItemBaseStyling("summary", fullScreen).numberCSS}>
-                                                                {formatNumber(need)}
-                                                            </Typography>
-                                                        </ItemBase>
-                                                    ))}
-                                            </>
-                                        ) : null}
-                                    </>
-                                )}
-                                {sortedEventMaterials.length > 0 && (
-                                    <Accordion
-                                        onChange={(_, expanded) => setAccordionExpanded(expanded)}
-                                        expanded={isAccordionExpanded}>
-                                        <AccordionSummary >
-                                            <Stack direction="row" width="100%" justifyContent="space-between">Income up to the selected event is deducted
-                                                {isAccordionExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                                        {(sortedNeedToCraft.length > 0 || sortedNeedToCraftByOpInGroup.length > 0) && (
+                                            <><Stack direction="row" alignItems="center">
+                                                <IconButton size="large" onClick={handleCalculateGoalsInOrder}
+                                                    color={(settings.plannerSettings?.calculateGoalsInOrder ?? true) ? "primary" : "default"}>
+                                                    <LowPriorityIcon fontSize="inherit" />
+                                                </IconButton>
+                                                <IconButton disabled={!(settings.plannerSettings?.calculateGoalsInOrder ?? true)}
+                                                    size="large" onClick={() => setPivot(prev => !prev)}>
+                                                    <PivotTableChartIcon />
+                                                </IconButton>
+                                                <Typography variant="h3" p={1} fontWeight="bold">{`Craft high tier materials${(settings.plannerSettings?.calculateGoalsInOrder ?? true) ? " in operators order" : ""}`}</Typography>
                                             </Stack>
-                                        </AccordionSummary>
-                                        <AccordionDetails>
-                                            {sortedEventMaterials
-                                                .map(([id, num]) => (
-                                                    <Tooltip key={`${id}-tip`} title={getTotalsTooltipText(id)}>
-                                                        <ItemBase key={id} itemId={id} size={getItemBaseStyling("summary_totals", fullScreen).itemBaseSize}
-                                                            sx={{
-                                                                ...(farmTimes[id] && getFarmCSS("round")),
-                                                                ...(infiniteTimes[id] && { ...getFarmCSS("round", "text.primary") })
-                                                            }}>
-                                                            <Typography {...getItemBaseStyling("summary_totals", fullScreen).numberCSS}>
-                                                                {(num === 0 && infiniteTimes[id]) ? formatNumber(Infinity) : formatNumber(num)}
-                                                            </Typography>
-                                                        </ItemBase>
-                                                    </Tooltip>
-                                                ))}
-                                        </AccordionDetails>
-                                    </Accordion>
+                                                {!(settings.plannerSettings?.calculateGoalsInOrder ?? true) ? (
+                                                    <>
+                                                        {sortedNeedToCraft
+                                                            .map(([id, need]) => (
+                                                                <ItemBase key={id} itemId={id} size={getItemBaseStyling("summary", fullScreen).itemBaseSize}>
+                                                                    <Typography {...getItemBaseStyling("summary", fullScreen).numberCSS}>
+                                                                        {formatNumber(need)}
+                                                                    </Typography>
+                                                                </ItemBase>
+                                                            ))}
+                                                    </>) : (
+                                                    <Stack
+                                                        direction={pivot ? "column" : "row"}
+                                                        flexWrap={pivot ? "nowrap" : "wrap"}
+                                                        alignItems={pivot ? "start" : "center"}
+                                                    >
+                                                        {sortedNeedToCraftByOpInGroup
+                                                            .map(({ groupIndex, op_id, materials }) => {
+                                                                const avatar = materials.future.length > 0 && (
+                                                                    <CompletionIndicator key={`${groupIndex}-${op_id}`} ml={pivot ? 0 : 2} completable={false} completableByCrafting={true}>
+                                                                        <Image
+                                                                            src={`${imageBase}/avatars/${op_id}.webp`}
+                                                                            width={getItemBaseStyling("summary_craft", fullScreen).itemBaseSize}
+                                                                            height={getItemBaseStyling("summary_craft", fullScreen).itemBaseSize}
+                                                                            alt=""
+                                                                        />
+                                                                    </CompletionIndicator>
+                                                                );
+                                                                const matsNodes = materials.future.map(([id, need]) => {
+                                                                    const isCraftable = materials.current.get(id)?.isCraftable ?? true;
+                                                                    return (
+                                                                        <Tooltip key={id} title={isCraftable ? "Craft One" : ""}>
+                                                                            <Box
+                                                                                key={id}
+                                                                                onClick={() => { if (isCraftable) onCraftOne(id, false); }}
+                                                                                sx={{
+                                                                                    position: "relative",
+                                                                                    display: "inline-block",
+                                                                                    cursor: isCraftable ? "pointer" : "default",
+                                                                                    transition: "opacity 0.1s",
+                                                                                    "&:hover, &:focus": {
+                                                                                        opacity: isCraftable ? 0.5 : 1,
+                                                                                    },
+                                                                                }}
+                                                                            >
+                                                                                <ItemBase
+                                                                                    key={`${groupIndex}-${op_id}-${id}`}
+                                                                                    itemId={id}
+                                                                                    size={getItemBaseStyling("summary", fullScreen).itemBaseSize}
+                                                                                >
+                                                                                    <Typography {...getItemBaseStyling("summary", fullScreen).numberCSS}>
+                                                                                        {formatNumber(need)}
+                                                                                    </Typography>
+                                                                                </ItemBase>
+                                                                                {isCraftable && (
+                                                                                    <Box
+                                                                                        sx={{
+                                                                                            position: "absolute",
+                                                                                            top: "35%",
+                                                                                            left: "50%",
+                                                                                            transform: "translate(-50%, -50%)",
+                                                                                            pointerEvents: "none",
+                                                                                            fontWeight: "900",
+                                                                                            color: "primary.main",
+                                                                                            fontSize: "1.2rem",
+                                                                                            textShadow: `-1px -1px 0 black, 1px -1px 0 black, -1px 1px 0 black, 1px 1px 0 black`,
+                                                                                        }}
+                                                                                    >
+                                                                                        +1
+                                                                                    </Box>
+                                                                                )}
+                                                                            </Box></Tooltip>
+                                                                    )
+                                                                }
+                                                                );
+                                                                return pivot ? (
+                                                                    <Stack
+                                                                        key={`row-${groupIndex}-${op_id}`}
+                                                                        direction="row"
+                                                                        alignItems="center"
+                                                                        flexWrap="wrap"
+                                                                    >
+                                                                        {avatar}
+                                                                        {matsNodes}
+                                                                    </Stack>
+                                                                ) : (
+                                                                    [avatar, ...matsNodes]
+                                                                );
+                                                            })}
+                                                    </Stack>)
+                                                }
+                                            </>
+                                        )}
+                                        {sortedEventMaterials.length > 0 && (
+                                            <Accordion
+                                                onChange={(_, expanded) => setAccordionExpanded(expanded)}
+                                                expanded={isAccordionExpanded}>
+                                                <AccordionSummary >
+                                                    <Stack direction="row" width="100%" justifyContent="space-between">Income up to the selected event is deducted
+                                                        {isAccordionExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                                                    </Stack>
+                                                </AccordionSummary>
+                                                <AccordionDetails>
+                                                    {sortedEventMaterials
+                                                        .map(([id, num]) => (
+                                                            <Tooltip key={`${id}-tip`} title={getTotalsTooltipText(id)}>
+                                                                <ItemBase key={id} itemId={id} size={getItemBaseStyling("summary_totals", fullScreen).itemBaseSize}
+                                                                    sx={{
+                                                                        ...(farmTimes[id] && getFarmCSS("round")),
+                                                                        ...(infiniteTimes[id] && { ...getFarmCSS("round", "text.primary") })
+                                                                    }}>
+                                                                    <Typography {...getItemBaseStyling("summary_totals", fullScreen).numberCSS}>
+                                                                        {(num === 0 && infiniteTimes[id]) ? formatNumber(Infinity) : formatNumber(num)}
+                                                                    </Typography>
+                                                                </ItemBase>
+                                                            </Tooltip>
+                                                        ))}
+                                                </AccordionDetails>
+                                            </Accordion>
+                                        )}
+                                    </>
                                 )}
                             </Box>
                         </Slide>
@@ -958,24 +1143,25 @@ const MaterialsSummaryDialog = React.memo((props: Props) => {
                     justifyContent: "flex-start",
                     width: fullScreen ? "90%" : "100%"
                 }} >
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={() => {
+                            handleClose();
+                            openEvents(true);
+                        }}
+                        sx={{ order: fullScreen ? 2 : 1, whiteSpace: "nowrap", minWidth: "fit-content" }}
+                    >{fullScreen ? "Events" : "Events tracker"}
+                    </Button>
                     {tab === "summary" && <>
-                        <Button
-                            variant="contained"
-                            color="primary"
-                            onClick={() => {
-                                handleClose();
-                                openEvents(true);
-                            }}
-                            sx={{ order: fullScreen ? 2 : 1, whiteSpace: "nowrap", minWidth: "fit-content" }}
-                        >{fullScreen ? "Events" : "Events tracker"}
-                        </Button>
                         <Box sx={{ width: "100%", order: fullScreen ? 1 : 2 }}>
                             <EventsSelector
-                                emptyItem={"Select future event (tracker, or defaults)"}
+                                emptyItem={`Select future event from ${eventsSource.name}`}
                                 dataType={'events'}
                                 eventsData={eventsData}
                                 selectedEvent={selectedEvent ?? createEmptyNamedEvent()}
                                 onChange={onEventChange}
+                                onEventToggle={eventsSource.toggleFunction}
                             />
                         </Box>
                     </>}

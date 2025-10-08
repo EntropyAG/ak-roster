@@ -19,6 +19,7 @@ import operatorJson from "data/operators";
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 import { Operator } from "types/operators/operator";
 import imageBase from "util/imageBase";
+import { CompletionIndicator } from "./CompletionIndicator";
 
 interface Props {
   operator: Operator;
@@ -29,6 +30,9 @@ interface Props {
   completeAllGoalsFromOperator: (opId: string, groupName: string) => void;
   children?: React.ReactNode;
   onOpSelect: (opId: string, groupName: string) => void;
+  onGoalRefresh: (operatorGoal: GoalData) => void;
+  completable: boolean;
+  completableByCrafting: boolean;
 }
 
 export const OperatorGoals = memo((props: Props) => {
@@ -40,6 +44,9 @@ export const OperatorGoals = memo((props: Props) => {
     completeAllGoalsFromOperator,
     children,
     onOpSelect,
+    onGoalRefresh,
+    completable,
+    completableByCrafting,
   } = props;
 
   const [expanded, setExpanded] = useState<boolean>(false);
@@ -94,6 +101,14 @@ export const OperatorGoals = memo((props: Props) => {
     [completeAllGoalsFromOperator, handleMoreMenuClose, operatorGoal]
   );
 
+  const handleRefreshGoalClick = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>) => {
+      handleMoreMenuClose(e);
+      onGoalRefresh(operatorGoal);
+    },
+    [onGoalRefresh, handleMoreMenuClose, operatorGoal]
+  );
+
   return (
     <Accordion
       onChange={(_, expanded) => setExpanded(expanded)}
@@ -144,7 +159,13 @@ export const OperatorGoals = memo((props: Props) => {
                 onOpSelect(operatorGoal.op_id, operatorGoal.group_name);
               }}
             >
-              <Image src={imgUrl} width={64} height={64} alt="" />
+              <CompletionIndicator
+                completable={completable}
+                completableByCrafting={completableByCrafting}
+                orientation="vertical"
+              >
+                <Image src={imgUrl} width={64} height={64} alt="" />
+              </CompletionIndicator>
             </ButtonBase>
             {expanded ? (
               <RemoveCircleIcon
@@ -192,6 +213,9 @@ export const OperatorGoals = memo((props: Props) => {
           >
             <MenuItem component="button" onClick={handleEditGoalButtonClick}>
               <Typography>Edit Goal</Typography>
+            </MenuItem>
+            <MenuItem component="button" onClick={handleRefreshGoalClick}>
+              <Typography>Update & Clear</Typography>
             </MenuItem>
             <MenuItem component="button" onClick={handleMoveGoalButtonClick}>
               <Typography>Change Group</Typography>

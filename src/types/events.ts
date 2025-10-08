@@ -12,7 +12,7 @@ export type NamedEvent = Event & {
 };
 
 export type EventsData = {
-    [name: string]: Event;
+    [name: string]: Event & { disabled?: boolean };
 }
 
 export type WebEvent = {
@@ -44,6 +44,8 @@ export interface EventsSelectorProps {
     eventsData: EventsData;
     selectedEvent?: Event | null;
     onChange?: (namedEvent: NamedEvent) => void;
+    onOpen?: () => void;
+    onEventToggle?: (name: string) => void;
 }
 
 export type SubmitSource = EventsSelectorProps['dataType'] | 'current' | 'currentWeb'
@@ -52,4 +54,10 @@ export interface TrackerDefaults {
     lastUpdated?: string;
     webEventsData?: WebEventsData;
     eventsData?: EventsData;
+}
+
+export type UpcomingMaterialsData = {
+    materials: Record<string, number>;
+    farmTimes: Record<string, number>;
+    infiniteTimes: Record<string, number>;
 }

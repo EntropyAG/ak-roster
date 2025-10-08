@@ -14,12 +14,16 @@ export interface PlannerSettings {
   allowAllGoals: boolean;
   sortEmptyGroupsToBottom: boolean;
   inactiveOpsInGroups: InactiveOpsInGroups;
+  autoRefreshGoals: boolean;
+  calculateGoalsInOrder: boolean;
 }
 
 const plannerSettings: PlannerSettings = {
   allowAllGoals: false,
   sortEmptyGroupsToBottom: false,
   inactiveOpsInGroups: {},
+  autoRefreshGoals: true,
+  calculateGoalsInOrder: true,
 };
 
 export interface DepotSettings {
@@ -37,6 +41,7 @@ export interface ImportSettings {
   importOperators: boolean;
   importDepot: boolean;
   importServer: "en" | "kr" | "jp";
+  refreshGoals: boolean;
 }
 
 const depotSettings: DepotSettings = {
@@ -64,6 +69,7 @@ const importSettings: ImportSettings = {
   importOperators: true,
   importDepot: true,
   importServer: "en",
+  refreshGoals: true,
 };
 
 export const defaultSettings: LocalStorageSettings = {

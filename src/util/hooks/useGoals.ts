@@ -3,11 +3,16 @@ import supabase from "supabase/supabaseClient";
 import GoalData, { getPlannerGoals, GoalDataInsert, plannerGoalToGoalData } from "types/goalData";
 import handlePostgrestError from "util/fns/handlePostgrestError";
 import useLocalStorage from "./useLocalStorage";
-import { useAppSelector } from "legacyStore/hooks";
-import { selectGoals } from "legacyStore/goalsSlice";
-import { combineGoals } from "util/fns/planner/combineGoals";
-import { enqueueSnackbar } from "notistack";
 import _ from "lodash";
+
+export interface GoalsHook {
+  readonly goals: GoalData[];
+  readonly updateGoals: (goalsData: GoalDataInsert[]) => Promise<void>;
+  readonly removeAllGoals: () => Promise<void>;
+  readonly removeAllGoalsFromGroup: (groupName: string, cleanLocal?: boolean) => Promise<void>;
+  readonly removeAllGoalsFromOperator: (opId: string, groupName: string) => Promise<void>;
+  readonly changeLocalGoalGroup: (oldGoalGroup: string, newGoalGroup: string) => Promise<void>;
+}
 
 const fillNull = (goal: GoalDataInsert, index: number): GoalDataInsert => {
   const {
@@ -44,20 +49,22 @@ const fillNull = (goal: GoalDataInsert, index: number): GoalDataInsert => {
 
 function useGoals() {
   const [goals, _setGoals] = useLocalStorage<GoalData[]>("v3_goals", []);
-  const legacyGoals = useAppSelector(selectGoals);
   const [user_id, setUserId] = useState<string>("");
 
   const updateGoals = useCallback(
     async (goalsData: GoalDataInsert[]) => {
       const _goals = [...goals];
-      const maxIndex = (goals.reduce((acc, goal) => (goal.sort_order > acc ? goal.sort_order : acc), 0) ?? 0) + 1;
-
-      const nulledGoalsData = goalsData.map((g) => fillNull(g, maxIndex));
+      //group max index - remove some of index numbers leakage
+      const maxGroupIndex: Record<string, number> = {};
+      _goals.forEach(g => {
+        maxGroupIndex[g.group_name] = Math.max(maxGroupIndex[g.group_name] ?? 0, g.sort_order ?? 0);
+      });
+      const nulledGoalsData = goalsData.map((g) => fillNull(g, (maxGroupIndex[g.group_name] ?? -1) + 1));
       nulledGoalsData.forEach((goalInsert) => {
         const plannerGoals = getPlannerGoals(goalInsert);
         const substantial = plannerGoals.length > 0;
         if (!substantial) {
-          const index = goals.findIndex((x) => x.op_id === goalInsert.op_id && x.group_name === goalInsert.group_name);
+          const index = _goals.findIndex((x) => x.op_id === goalInsert.op_id && x.group_name === goalInsert.group_name);
           _goals.splice(index, 1);
           supabase
             .from("goals")
@@ -66,7 +73,7 @@ function useGoals() {
             .then(({ error }) => handlePostgrestError(error));
           return;
         }
-        const index = goals.findIndex((x) => x.op_id == goalInsert.op_id && x.group_name == goalInsert.group_name);
+        const index = _goals.findIndex((x) => x.op_id === goalInsert.op_id && x.group_name === goalInsert.group_name);
         if (index !== -1) {
           const newGoal: GoalData = { ...goals[index], ...goalInsert };
           _goals[index] = newGoal;
@@ -144,20 +151,6 @@ function useGoals() {
       let goalResult: GoalData[] = [];
       if (_goals?.length) {
         goalResult = _goals as GoalData[];
-      } else if (!goals.length && legacyGoals) {
-        enqueueSnackbar("Loading legacy planner data...", { variant: "info" });
-        const _goals = _.groupBy(legacyGoals.map(plannerGoalToGoalData), (g) => g.op_id ?? "");
-        const combinedGoals = Object.entries(_goals)
-          .filter(([, goals]) => goals?.length)
-          .map(([op_id, goals], i) => combineGoals(goals, op_id, user_id, i))
-          .filter((g) => g != null);
-        goalResult = combinedGoals;
-
-        const { error } = await supabase.from("goals").insert(goalResult);
-        if (error) handlePostgrestError(error);
-        else {
-          enqueueSnackbar("Finished loading data.", { variant: "success" });
-        }
       }
 
       if (!isCanceled) _setGoals(goalResult);
